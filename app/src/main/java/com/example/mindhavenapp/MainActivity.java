@@ -3,6 +3,7 @@ package com.example.mindhavenapp;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -21,9 +22,16 @@ public class MainActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         FirebaseUser currentUser = mAuth.getCurrentUser();
 
-        if (currentUser != null && currentUser.isEmailVerified()) {
-            startActivity(new Intent(MainActivity.this, HomeActivity.class));
-            finish();
+        if (currentUser != null) {
+
+            if (currentUser.isEmailVerified()) {
+                startActivity(new Intent(MainActivity.this, HomeActivity.class));
+                finish();
+            } else {
+                Toast.makeText(this, "Please verify your email first.", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(MainActivity.this, SignIn.class));
+                finish();
+            }
         } else {
             Button getStartedButton = findViewById(R.id.btn_next);
             getStartedButton.setOnClickListener(v -> {

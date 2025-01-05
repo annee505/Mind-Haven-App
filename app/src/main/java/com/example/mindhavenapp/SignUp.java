@@ -3,14 +3,11 @@ package com.example.mindhavenapp;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
-
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -35,7 +32,6 @@ public class SignUp extends AppCompatActivity {
         signInRedirectText = findViewById(R.id.signInRedirectText);
 
         signUpButton.setOnClickListener(v -> signUpUser());
-
 
         signInRedirectText.setOnClickListener(v -> {
             startActivity(new Intent(SignUp.this, SignIn.class));
