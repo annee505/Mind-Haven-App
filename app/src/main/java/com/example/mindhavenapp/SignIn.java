@@ -24,6 +24,9 @@ public class SignIn extends AppCompatActivity {
         EditText emailEditText = findViewById(R.id.editTextTextEmailAddress2);
         EditText passwordEditText = findViewById(R.id.editTextTextEmailAddress4);
         Button loginButton = findViewById(R.id.button3);
+        TextView forgotPasswordTextView = findViewById(R.id.textForgotPassword); // Add this TextView in your XML
+        TextView signUpTextView = findViewById(R.id.textSignUp);
+
 
         loginButton.setOnClickListener(v -> {
             String email = emailEditText.getText().toString();
@@ -49,10 +52,27 @@ public class SignIn extends AppCompatActivity {
             }
         });
 
-        TextView signUpTextView = findViewById(R.id.textSignUp);
         signUpTextView.setOnClickListener(v -> {
             Intent intent = new Intent(SignIn.this, SignUp.class);
             startActivity(intent);
+        });
+
+
+        forgotPasswordTextView.setOnClickListener(v -> {
+            String email = emailEditText.getText().toString();
+
+            if (TextUtils.isEmpty(email)) {
+                Toast.makeText(SignIn.this, "Please enter your email address to reset password", Toast.LENGTH_SHORT).show();
+            } else {
+                mAuth.sendPasswordResetEmail(email)
+                        .addOnCompleteListener(task -> {
+                            if (task.isSuccessful()) {
+                                Toast.makeText(SignIn.this, "Password reset email sent. Check your inbox.", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(SignIn.this, "Error: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+                        });
+            }
         });
     }
 }

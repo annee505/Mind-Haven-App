@@ -1,47 +1,93 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:id="@+id/drawerLayout">
 
-    <!-- Messages Section -->
     <LinearLayout
-        android:id="@+id/messagesLinearLayout"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="match_parent"
         android:orientation="vertical"
-        android:layout_weight="1" />
+        android:background="@color/pastel"
+        android:padding="16dp">
 
-    <!-- Message Input -->
-    <EditText
-        android:id="@+id/messageInput"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Type a message"
-        android:padding="8dp"/>
+        <LinearLayout
+            android:id="@+id/messagesLinearLayout"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal">
 
-    <!-- Send Button -->
-    <Button
-        android:id="@+id/sendMessageButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Send"/>
+            <ImageButton
+                android:id="@+id/chat"
+                android:layout_width="97dp"
+                android:layout_height="97dp"
+                android:layout_marginLeft="15dp"
+                android:layout_marginTop="580dp"
+                tools:srcCompat="@drawable/chat" />
 
-    <!-- Anonymous Chat Folder -->
-    <LinearLayout
-        android:id="@+id/anonymousChatFolder"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:paddingTop="16dp">
 
-        <Button
-            android:id="@+id/openAnonymousChatButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Anonymous Chat"/>
+
+            <ImageButton
+                android:id="@+id/settings"
+                android:layout_width="97dp"
+                android:layout_height="97dp"
+                android:layout_marginLeft="150dp"
+                android:layout_marginTop="580dp"
+                tools:srcCompat="@drawable/set"/>
+
+            <TextView
+                android:id="@+id/chatt"
+                android:layout_width="97dp"
+                android:textSize="15sp"
+                android:layout_height="97dp"
+                android:layout_marginLeft="-345dp"
+                android:layout_marginTop="675dp"
+                android:textColor="@color/black"
+                android:text="Chat" />
+
+            <TextView
+                android:layout_width="97dp"
+                android:layout_height="97dp"
+                android:textSize="15sp"
+                android:layout_marginLeft="160dp"
+                android:layout_marginTop="675dp"
+                android:textColor="@color/black"
+                android:text="Settings" />
+
+
+        </LinearLayout>
+
     </LinearLayout>
 
-</LinearLayout>
+    <LinearLayout
+        android:id="@+id/sidebarSettings"
+        android:layout_width="200dp"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+
+        android:background="@color/beige"
+        android:padding="16dp"
+        android:layout_gravity="end">
+
+        <TextView
+            android:id="@+id/logout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Log out"
+            android:textColor="@color/black"
+            android:textSize="18sp"
+            android:padding="8dp" />
+        <Switch
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Dark mode"
+            android:textSize="18sp"
+            android:textColor="@color/black"
+            android:padding="8dp"/>
+
+
+    </LinearLayout>
+
+</androidx.drawerlayout.widget.DrawerLayout>

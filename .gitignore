@@ -1,24 +1,29 @@
-*.iml
-.idea/
-.idea/**/workspace.xml
-.idea/**/tasks.xml
-.idea/**/usage.statistics.xml
-.idea/**/vcs.xml
-.idea/**/assetWizardSettings.xml
-.idea/**/navEditor.xml
-.idea/**/modules.xml
+# Android Studio files
+/.idea/
+/*.iml
+/local.properties
 
-local.properties
-*.jks
-*.keystore
-
-/build/
-.cxx/
-.externalNativeBuild/
+# Gradle files
 .gradle/
+/build/
+/*/build/
 
+# System files
 .DS_Store
 Thumbs.db
 
-/captures
-*.log
+# Android specific
+*.apk
+*.ap_
+*.dex
+*.class
+*.jar
+*.war
+
+# Temporary files
+/tmp/
+/caches/
+
+# Untracked directories
+/native/
+/wrapper/
