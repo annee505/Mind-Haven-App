@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">MindHaven</string>
+    <string name="chat_button" />
+    <string name="settings_button" />
+</resources>

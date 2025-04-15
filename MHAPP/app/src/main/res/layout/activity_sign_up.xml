@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:backgroundTint="@color/pastel"
+    android:background="@color/pastel"
+    android:gravity="center">
+
+
+    <EditText
+        android:id="@+id/emailEditText"
+        android:layout_width="match_parent"
+        android:background="@drawable/border_textview"
+        android:ems="10"
+        android:layout_height="37dp"
+        android:hint="Enter your e-mail"
+        android:textColor="@color/black"
+        android:textColorHint="@color/brown"
+        android:inputType="textEmailAddress"
+        android:textColorLink="#241010" />
+
+
+    <EditText
+        android:id="@+id/passwordEditText"
+        android:layout_width="match_parent"
+        android:layout_height="37dp"
+        android:layout_marginTop="18dp"
+        android:textColor="@color/black"
+        android:textColorHint="@color/brown"
+        android:background="@drawable/border_textview"
+        android:ems="10"
+        android:hint="Enter your password"
+        android:inputType="textPassword"
+        android:textColorLink="#241010" />
+
+
+    <EditText
+        android:id="@+id/repeatPasswordEditText"
+        android:layout_width="match_parent"
+        android:layout_height="37dp"
+        android:layout_marginTop="18dp"
+        android:textColor="@color/black"
+        android:textColorHint="@color/brown"
+        android:background="@drawable/border_textview"
+        android:ems="10"
+        android:hint="Repeat your password"
+        android:inputType="textPassword"
+        android:textColorLink="#241010" />
+
+
+    <Button
+        android:id="@+id/signUpButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
+        android:text="Sign Up"
+        android:textColor="@color/black"
+        android:backgroundTint="@color/brown" />
+
+
+    <TextView
+        android:id="@+id/signInRedirectText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Already have an account? Sign In"
+        android:textColor="@color/black"
+        android:clickable="true"
+        android:focusable="true" />
+</LinearLayout>

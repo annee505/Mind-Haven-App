@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="How are you feeling today?"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Choose one or more emotions:"
+        android:textSize="16sp"
+        android:layout_marginBottom="8dp" />
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none">
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/mood_group"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:chipSpacingHorizontal="8dp"
+            app:singleSelection="false">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/mood_happy"
+                style="@style/Widget.MaterialComponents.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Happy"
+                app:chipBackgroundColor="@color/chip_background_color" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/mood_sad"
+                style="@style/Widget.MaterialComponents.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Sad"
+                app:chipBackgroundColor="@color/chip_background_color" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/mood_excited"
+                style="@style/Widget.MaterialComponents.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Excited"
+                app:chipBackgroundColor="@color/chip_background_color" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/mood_scared"
+                style="@style/Widget.MaterialComponents.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Scared"
+                app:chipBackgroundColor="@color/chip_background_color" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/mood_disappointed"
+                style="@style/Widget.MaterialComponents.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Disappointed"
+                app:chipBackgroundColor="@color/chip_background_color" />
+
+        </com.google.android.material.chip.ChipGroup>
+    </HorizontalScrollView>
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        android:layout_marginTop="8dp">
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/mood_group_more"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:chipSpacingHorizontal="8dp"
+            app:singleSelection="false">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/mood_anxious"
+                style="@style/Widget.MaterialComponents.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Anxious"
+                app:chipBackgroundColor="@color/chip_background_color" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/mood_angry"
+                style="@style/Widget.MaterialComponents.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Angry"
+                app:chipBackgroundColor="@color/chip_background_color" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/mood_bored"
+                style="@style/Widget.MaterialComponents.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Bored"
+                app:chipBackgroundColor="@color/chip_background_color" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/mood_nostalgic"
+                style="@style/Widget.MaterialComponents.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nostalgic"
+                app:chipBackgroundColor="@color/chip_background_color" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/mood_hopeful"
+                style="@style/Widget.MaterialComponents.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Hopeful"
+                app:chipBackgroundColor="@color/chip_background_color" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/mood_stressed"
+                style="@style/Widget.MaterialComponents.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Stressed"
+                app:chipBackgroundColor="@color/chip_background_color" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/mood_curious"
+                style="@style/Widget.MaterialComponents.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Curious"
+                app:chipBackgroundColor="@color/chip_background_color" />
+
+        </com.google.android.material.chip.ChipGroup>
+    </HorizontalScrollView>
+
+    <Button
+        android:id="@+id/button_get_recommendations"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Get Recommendations"
+        android:layout_marginTop="16dp" />
+
+</LinearLayout> 
