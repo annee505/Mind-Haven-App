@@ -56,16 +56,14 @@ public class PracticalCoursesFragment extends Fragment {
                 "Priority Matrix Creation",
                 "Boundary Setting Practice"
         );
-        courses.add(new Course( // Ensure you're using the correct class name, Course instead of PracticalCourse
+        courses.add(new Course(
                 "Stress Management",
                 "Learn effective techniques to manage daily stress",
                 stressLessons,
                 stressExercises,
                 "Beginner"
         ));
-        git add .
-        git commit -m "Initial commit"
-        // Add more courses as needed
+
     }
 
     private void checkIfEmpty() {
