@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "925546907678",
+    "firebase_url": "https://mindhavenappjava-default-rtdb.firebaseio.com",
+    "project_id": "mindhavenappjava",
+    "storage_bucket": "mindhavenappjava.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:925546907678:android:58369a576ca1eca85ec60f",
+        "android_client_info": {
+          "package_name": "com.example.mindhaven"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCq0PB3IO-0gfQfZs0waVk7i-tNh91XN4Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

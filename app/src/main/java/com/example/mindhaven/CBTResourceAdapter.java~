@@ -1,0 +1,47 @@
+
+package com.example.mindhaven;
+
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+import androidx.recyclerview.widget.RecyclerView;
+import java.util.List;
+
+public class CBTResourceAdapter extends RecyclerView.Adapter<CBTResourceAdapter.ViewHolder> {
+    private List<CBTWorksheet> worksheets;
+
+    public CBTResourceAdapter(List<CBTWorksheet> worksheets) {
+        this.worksheets = worksheets;
+    }
+
+    @Override
+    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_cbt_resource, parent, false);
+        return new ViewHolder(view);
+    }
+
+    @Override
+    public void onBindViewHolder(ViewHolder holder, int position) {
+        CBTWorksheet worksheet = worksheets.get(position);
+        holder.titleText.setText(worksheet.getTitle());
+        holder.descriptionText.setText(worksheet.getDescription());
+    }
+
+    @Override
+    public int getItemCount() {
+        return worksheets.size();
+    }
+
+    static class ViewHolder extends RecyclerView.ViewHolder {
+        TextView titleText;
+        TextView descriptionText;
+
+        ViewHolder(View view) {
+            super(view);
+            titleText = view.findViewById(R.id.textTitle);
+            descriptionText = view.findViewById(R.id.textDescription);
+        }
+    }
+}

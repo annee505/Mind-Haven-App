@@ -1,0 +1,45 @@
+package com.example.mindhaven;
+
+import android.os.Bundle;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.mindhaven.FavoriteManager;
+import com.example.mindhaven.R;
+import com.example.mindhaven.Recommendation;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+public class FavoritesActivity extends AppCompatActivity {
+    private RecyclerView recyclerView;
+    private FavoritesAdapter adapter;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_favorites);
+
+        recyclerView = findViewById(R.id.favoritesRecyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        loadFavorites();
+    }
+
+    private void loadFavorites() {
+        Set<String> favoriteIds = FavoriteManager.getFavorites(this);
+        List<Recommendation> favorites = new ArrayList<>();
+
+        // Implement your DataSource method to get recommendations by IDs
+        for (String id : favoriteIds) {
+            Recommendation rec = DataSource.getRecommendationById(id);
+            if (rec != null) favorites.add(rec);
+        }
+
+        adapter = new FavoritesAdapter(favorites);
+        recyclerView.setAdapter(adapter);
+    }
+}

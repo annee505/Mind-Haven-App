@@ -1,0 +1,106 @@
+package com.example.mindhaven;
+
+import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
+import android.widget.Button;
+import android.widget.EditText;
+
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+// ChatFragment.java
+public class ChatFragment extends Fragment {
+
+    private String username;
+    private FirebaseService firebaseService;
+    private RecyclerView messagesRecyclerView;
+    private MessageAdapter messageAdapter;
+    private EditText messageInput;
+    private Button sendButton;
+    private List<Message> messageList = new ArrayList<>();
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_chat, container, false);
+
+        // Initialize UI components
+        messagesRecyclerView = view.findViewById(R.id.messages_recycler_view);
+        messageInput = view.findViewById(R.id.message_input);
+        sendButton = view.findViewById(R.id.send_button);
+
+        // Set up RecyclerView
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
+        messagesRecyclerView.setLayoutManager(layoutManager);
+        messageAdapter = new MessageAdapter(messageList, getContext());
+        messagesRecyclerView.setAdapter(messageAdapter);
+
+        // Generate random username
+        generateRandomUsername();
+
+        // Initialize Firebase
+        firebaseService = new FirebaseService();
+        firebaseService.initialize();
+
+        // Set message listener
+        firebaseService.addMessageListener(messages -> {
+            messageList.clear();
+            messageList.addAll(messages);
+            messageAdapter.notifyDataSetChanged();
+            if (!messageList.isEmpty()) {
+                messagesRecyclerView.scrollToPosition(messageList.size() - 1);
+            }
+        });
+
+        // Set up send button
+        sendButton.setOnClickListener(v -> sendMessage());
+
+        // Handle Enter key on message input
+        messageInput.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_SEND) {
+                sendMessage();
+                return true;
+            }
+            return false;
+        });
+
+        // Load messages
+        firebaseService.loadMessages();
+
+        return view;
+    }
+
+    private void generateRandomUsername() {
+        // Generate a random username in format user_XXXXX
+        String randomSuffix = UUID.randomUUID().toString().substring(0, 5);
+        username = "user_" + randomSuffix;
+        Log.d("ChatFragment", "Generated username: " + username);
+    }
+
+    private void sendMessage() {
+        String content = messageInput.getText().toString().trim();
+        if (!content.isEmpty()) {
+            LocalDateTime timestamp = LocalDateTime.now();
+            Message message = new Message(username, content, timestamp);
+            firebaseService.sendMessage(message);
+            messageInput.setText("");
+        }
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (firebaseService != null) {
+            firebaseService.cleanup();
+        }
+    }
+}

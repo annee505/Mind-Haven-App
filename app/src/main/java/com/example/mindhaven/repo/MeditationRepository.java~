@@ -1,0 +1,122 @@
+package com.example.mindhaven.repo;
+
+import android.app.Application;
+import android.util.Log;
+
+import androidx.lifecycle.LiveData;
+
+import com.example.mindhaven.db.AppDatabase;
+import com.example.mindhaven.db.MeditationAudioDao;
+import com.example.mindhaven.models.MeditationAudio;
+
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+
+public class MeditationRepository {
+    private static final String TAG = "MeditationRepository";
+    private static final String API_BASE_URL = "https://api.example.com/mindhaven/"; // Replace with your actual API URL
+
+    private final MeditationAudioDao meditationAudioDao;
+    private final ExecutorService databaseExecutor;
+    private final MeditationApiService apiService;
+    private final Application application;
+
+    public MeditationRepository(Application application) {
+        this.application = application;
+        AppDatabase db = AppDatabase.getDatabase(application);
+        meditationAudioDao = db.meditationAudioDao();
+        databaseExecutor = AppDatabase.getDatabaseWriteExecutor();
+
+        // Set up Retrofit for API calls
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(API_BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        apiService = retrofit.create(MeditationApiService.class);
+
+        // Refresh data from API if needed
+        refreshMeditationsFromApi();
+    }
+
+    // Get all meditation audios
+    public LiveData<List<MeditationAudio>> getAllAudios() {
+        return meditationAudioDao.getAllAudios();
+    }
+
+    // Get meditations by category
+    public LiveData<List<MeditationAudio>> getAudiosByCategory(String category) {
+        return meditationAudioDao.getAudiosByCategory(category);
+    }
+
+    // Get favorite meditations
+    public LiveData<List<MeditationAudio>> getFavoriteAudios() {
+        return meditationAudioDao.getFavoriteAudios();
+    }
+
+    // Insert a new meditation
+    public void insert(MeditationAudio audio) {
+        databaseExecutor.execute(() -> {
+            meditationAudioDao.insert(audio);
+        });
+    }
+
+    // Update favorite status
+    public void updateFavoriteStatus(MeditationAudio audio) {
+        databaseExecutor.execute(() -> {
+            meditationAudioDao.updateFavoriteStatus(audio.getId(), !audio.isFavorite());
+        });
+    }
+
+    // Refresh the local database with data from the API
+    private void refreshMeditationsFromApi() {
+        // First check if we need to fetch data - e.g., if the database is empty or data is stale
+        databaseExecutor.execute(() -> {
+            int count = meditationAudioDao.getCount();
+            if (count == 0) {
+                // If the database is empty, fetch from API immediately
+                fetchMeditationsFromApi();
+            } else {
+                // Otherwise, we still fetch but don't block
+                fetchMeditationsFromApi();
+            }
+        });
+    }
+
+    private void fetchMeditationsFromApi() {
+        Call<MeditationResponse> call = apiService.getMeditations();
+
+        call.enqueue(new Callback<MeditationResponse>() {
+            @Override
+            public void onResponse(Call<MeditationResponse> call, Response<MeditationResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    MeditationResponse meditationResponse = response.body();
+                    List<MeditationAudio> meditations = meditationResponse.getMeditations();
+
+                    if (meditations != null && !meditations.isEmpty()) {
+                        // Save to database
+                        databaseExecutor.execute(() -> {
+                            for (MeditationAudio meditation : meditations) {
+                                meditationAudioDao.insert(meditation);
+                            }
+                            Log.d(TAG, "Saved " + meditations.size() + " meditations from API");
+                        });
+                    }
+                } else {
+                    Log.e(TAG, "API call failed: " + response.message());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<MeditationResponse> call, Throwable t) {
+                Log.e(TAG, "API call error: " + t.getMessage());
+            }
+        });
+    }
+}

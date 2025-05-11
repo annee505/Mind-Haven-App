@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="meditation_library_title">Meditation Library</string>
+    <string name="app_name">MindHaven</string>
+    <string name="chat_button"></string>
+    <string name="settings_button"></string>
+
+    <string name="favorite_button">Add to favorites</string>
+    <string name="shuffle_button">Shuffle Recommendations</string>
+    <string name="favorites">Favorites</string>
+    <string name="view_favorites">Your Favorites</string>
+    <string name="no_courses_available">No practical courses available\nCheck back later!</string>
+    <string name="title">Course Title</string>
+</resources>

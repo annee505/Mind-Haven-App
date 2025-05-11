@@ -1,0 +1,43 @@
+
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read": "$uid === auth.uid",
+        ".write": "$uid === auth.uid"
+      }
+    },
+    "mood_tracking": {
+      "$uid": {
+        ".read": "$uid === auth.uid",
+        ".write": "$uid === auth.uid"
+      }
+    },
+    "sleep_tracking": {
+      "$uid": {
+        ".read": "$uid === auth.uid",
+        ".write": "$uid === auth.uid"
+      }
+    },
+    "chat_messages": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "meditation_sessions": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    }
+  },
+  "storage": {
+    "rules": {
+      "profile_images/{userId}": {
+        ".read": "auth != null",
+        ".write": "auth != null && request.auth.uid == userId"
+      },
+      "meditation_audio/*": {
+        ".read": "auth != null",
+        ".write": "auth != null && request.auth.token.admin === true"
+      }
+    }
+  }
+}

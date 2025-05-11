@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "233822801550",
+    "project_id": "mind-haven-4a9f0",
+    "storage_bucket": "mind-haven-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:233822801550:android:1654a97c78487f4fe3c3df",
+        "android_client_info": {
+          "package_name": "com.example.mindhaven"
+        }
+      },
+
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD9xogkqnVZg5DHG3NDJMEzDSsDC20eF8k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

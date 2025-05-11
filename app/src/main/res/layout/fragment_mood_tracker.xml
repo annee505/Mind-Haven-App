@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/pastel">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@color/pastel"
+        android:padding="16dp">
+
+        <!-- Mood Selection Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="How are you feeling?"
+
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/brown"
+            android:layout_marginBottom="16dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginBottom="24dp">
+
+            <Button
+                android:id="@+id/btnHappy"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="😊"
+                android:textSize="24sp"
+                android:layout_margin="4dp"
+                android:backgroundTint="@color/pastel"/>
+
+            <Button
+                android:id="@+id/btnNeutral"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="😐"
+                android:textSize="24sp"
+                android:layout_margin="4dp"
+                android:backgroundTint="@color/pastel"/>
+
+            <Button
+                android:id="@+id/btnSad"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="😔"
+                android:textSize="24sp"
+                android:layout_margin="4dp"
+                android:backgroundTint="@color/pastel"/>
+        </LinearLayout>
+
+        <!-- Tracking Frequency Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tracking Frequency"
+            android:textSize="16sp"
+            android:textColor="@color/brown"
+            android:layout_marginBottom="8dp"/>
+
+        <RadioGroup
+            android:id="@+id/radioGroupFrequency"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="16dp">
+
+            <RadioButton
+                android:id="@+id/radioDaily"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/black"
+                android:text="Daily"/>
+
+            <RadioButton
+                android:id="@+id/radioTwiceDaily"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/black"
+                android:text="Twice a day"/>
+
+            <RadioButton
+                android:id="@+id/radioCustom"
+                android:layout_width="wrap_content"
+                android:textColor="@color/black"
+                android:layout_height="wrap_content"
+                android:text="Custom"/>
+        </RadioGroup>
+
+        <!-- Custom Input Section (Hidden by default) -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/customInputLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:layout_marginBottom="8dp">
+
+            <Button
+                android:id="@+id/timePickerButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Select Time"
+                android:backgroundTint="@color/brown"
+                android:textColor="@color/white"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Custom Notification Message (Hidden by default) -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/customMessageLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:layout_marginBottom="16dp"
+            android:hint="Notification message">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/customMessageField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Note Section -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="What's on your mind?"
+            android:textColor="@color/black"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_marginBottom="16dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/noteInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minLines="3"
+                android:gravity="top"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Activities Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="What are you doing?"
+            android:textSize="16sp"
+            android:textColor="@color/brown"
+            android:layout_marginBottom="8dp"/>
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/activitiesChipGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipWork"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:backgroundTint="@color/wbrown"
+                android:textColor="@color/black"
+                android:text="Working"/>
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipStudying"
+                android:layout_width="wrap_content"
+                android:textColor="@color/black"
+                android:backgroundTint="@color/wbrown"
+                android:layout_height="wrap_content"
+                android:text="Studying"/>
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipRelaxing"
+                android:layout_width="wrap_content"
+                android:textColor="@color/black"
+                android:backgroundTint="@color/wbrown"
+                android:layout_height="wrap_content"
+                android:text="Relaxing"/>
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipExercising"
+                android:layout_width="wrap_content"
+                android:textColor="@color/black"
+                android:backgroundTint="@color/wbrown"
+                android:layout_height="wrap_content"
+                android:text="Exercising"/>
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipSocializing"
+                android:layout_width="wrap_content"
+                android:textColor="@color/black"
+                android:backgroundTint="@color/wbrown"
+                android:layout_height="wrap_content"
+                android:text="Socializing"/>
+        </com.google.android.material.chip.ChipGroup>
+
+        <!-- Time of Day -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Time of Day"
+            android:textSize="16sp"
+            android:textColor="@color/brown"
+            android:layout_marginBottom="8dp"/>
+
+        <RadioGroup
+            android:id="@+id/timeOfDayGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="24dp">
+
+            <RadioButton
+                android:id="@+id/radioMorning"
+                android:layout_width="wrap_content"
+                android:textColor="@color/black"
+                android:layout_height="wrap_content"
+                android:text="Morning"/>
+
+            <RadioButton
+                android:id="@+id/radioAfternoon"
+                android:textColor="@color/black"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Afternoon"/>
+
+            <RadioButton
+                android:id="@+id/radioEvening"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/black"
+                android:text="Evening"/>
+        </RadioGroup>
+
+        <!-- Save Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="24dp">
+
+            <!-- Save Preferences Button -->
+            <Button
+                android:id="@+id/btnSavePreferences"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Save Preferences"
+                android:backgroundTint="@color/brown"
+                android:textColor="@color/white" />
+
+            <!-- Save Mood Button -->
+            <Button
+                android:id="@+id/btnSaveMood"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Save Mood"
+                android:backgroundTint="@color/brown"
+                android:textColor="@color/white"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Mood Report Button -->
+            <Button
+                android:id="@+id/btnMoodReport"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Mood Report"
+                android:backgroundTint="@color/brown"
+                android:textColor="@color/white" />
+        </LinearLayout>
+
+        <!-- Mood Reports List -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/moodReportsRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
+            tools:listitem="@layout/item_mood_report" />
+
+        <Button
+            android:id="@+id/test_notification_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Test Notification"
+            android:layout_marginTop="16dp"/>
+
+    </LinearLayout>
+</ScrollView>

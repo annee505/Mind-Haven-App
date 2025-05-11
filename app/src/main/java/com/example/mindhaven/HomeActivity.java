@@ -1,0 +1,388 @@
+package com.example.mindhaven;
+
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.MenuItem;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.Switch;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.bumptech.glide.Glide;
+import com.example.mindhaven.adapter.CourseAdapter;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+
+public class HomeActivity extends AppCompatActivity {
+
+    private BottomNavigationView bottomNavigationView;
+    private DrawerLayout drawerLayout;
+    private TextView logOutTextView;
+    private ImageView profileImage;
+    private TextInputEditText displayNameInput;
+    private TextInputEditText usernameInput;
+    private Button saveProfileButton;
+    private Switch notificationSwitch;
+    private FirebaseAuth mAuth;
+    private DatabaseReference userRef;
+    private StorageReference storageRef;
+    private Uri selectedImageUri;
+    private ActivityResultLauncher<String> imagePickerLauncher;
+    private static final int NOTIFICATION_PERMISSION_REQUEST_CODE = 1001;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        try {
+            setContentView(R.layout.activity_home);
+
+            mAuth = FirebaseAuth.getInstance();
+            FirebaseUser currentUser = mAuth.getCurrentUser();
+            if (currentUser == null) {
+                startActivity(new Intent(this, SignIn.class));
+                finish();
+                return;
+            }
+
+            userRef = FirebaseDatabase.getInstance().getReference("users").child(currentUser.getUid());
+            storageRef = FirebaseStorage.getInstance().getReference("profile_images").child(currentUser.getUid());
+
+            // Initialize UI components
+            bottomNavigationView = findViewById(R.id.bottomNavigationView);
+            drawerLayout = findViewById(R.id.drawerLayout);
+            logOutTextView = findViewById(R.id.logout);
+            profileImage = findViewById(R.id.profileImage);
+            displayNameInput = findViewById(R.id.displayNameInput);
+            usernameInput = findViewById(R.id.usernameInput);
+            saveProfileButton = findViewById(R.id.saveProfileButton);
+            notificationSwitch = findViewById(R.id.notificationSwitch);
+            TextView favorites = drawerLayout.findViewById(R.id.favorites);
+            favorites.setOnClickListener(v -> {
+                startActivity(new Intent(this, FavoritesActivity.class));
+                drawerLayout.closeDrawer(GravityCompat.END);
+            });
+
+
+            // Check and request notification permission
+            checkNotificationPermission();
+
+            // Initialize image picker
+            imagePickerLauncher = registerForActivityResult(
+                    new ActivityResultContracts.GetContent(),
+                    uri -> {
+                        if (uri != null) {
+                            selectedImageUri = uri;
+                            try {
+                                Glide.with(this)
+                                        .load(uri)
+                                        .circleCrop()
+                                        .into(profileImage);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                Toast.makeText(this, "Failed to load image", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    }
+            );
+
+            loadUserProfile();
+
+            profileImage.setOnClickListener(v -> imagePickerLauncher.launch("image/*"));
+
+            saveProfileButton.setOnClickListener(v -> saveUserProfile());
+
+            initializeCourses();
+
+            handleIntent(getIntent());
+
+            // Set listener *after* initial handling
+            bottomNavigationView.setOnItemSelectedListener(item -> {
+                handleBottomNavigation(item.getItemId());
+                return true; // Indicate the event was handled
+            });
+
+        } catch (Exception e) {
+            Log.e("HomeActivity", "Error in onCreate", e);
+        }
+    }
+
+    private void initializeCourses() {
+        RecyclerView coursesRecycler = findViewById(R.id.rvCourses);
+        FirebaseHelper.getInstance().fetchCourses(courses -> {
+            CourseAdapter adapter = new CourseAdapter(courses);
+            coursesRecycler.setAdapter(adapter);
+        });
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        requestNotificationPermission();
+    }
+
+    private void requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 100);
+            }
+        }
+    }
+
+    private void loadUserProfile() {
+        userRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                UserProfile profile = snapshot.getValue(UserProfile.class);
+                if (profile != null) {
+                    displayNameInput.setText(profile.getDisplayName());
+                    usernameInput.setText(profile.getUsername());
+                    if (profile.getProfileImageUrl() != null) {
+                        Glide.with(HomeActivity.this)
+                                .load(profile.getProfileImageUrl())
+                                .circleCrop()
+                                .into(profileImage);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(HomeActivity.this, "Failed to load profile: " + error.getMessage(),
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void saveUserProfile() {
+        String displayName = displayNameInput.getText().toString().trim();
+        String username = usernameInput.getText().toString().trim();
+
+        if (displayName.isEmpty() || username.isEmpty()) {
+            Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        saveProfileButton.setEnabled(false);
+
+        if (selectedImageUri != null) {
+
+            StorageReference imageRef = storageRef.child("profile.jpg");
+            imageRef.putFile(selectedImageUri)
+                    .addOnSuccessListener(taskSnapshot -> {
+                        imageRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                            saveProfileData(displayName, username, uri.toString());
+                        });
+                    })
+                    .addOnFailureListener(e -> {
+                        saveProfileButton.setEnabled(true);
+                        Toast.makeText(HomeActivity.this, "Failed to upload image: " + e.getMessage(),
+                                Toast.LENGTH_SHORT).show();
+                    });
+        } else {
+
+            saveProfileData(displayName, username, null);
+        }
+    }
+
+    private void saveProfileData(String displayName, String username, String imageUrl) {
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser == null) return;
+
+        UserProfile profile = new UserProfile(
+                currentUser.getUid(),
+                displayName,
+                username,
+                imageUrl != null ? imageUrl : getCurrentProfileImageUrl()
+        );
+
+        userRef.setValue(profile)
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(HomeActivity.this, "Profile updated successfully", Toast.LENGTH_SHORT).show();
+                    saveProfileButton.setEnabled(true);
+                    selectedImageUri = null;
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(HomeActivity.this, "Failed to update profile: " + e.getMessage(),
+                            Toast.LENGTH_SHORT).show();
+                    saveProfileButton.setEnabled(true);
+                });
+    }
+
+    private String getCurrentProfileImageUrl() {
+
+        Object tag = profileImage.getTag();
+        return tag != null ? tag.toString() : null;
+    }
+
+    private void logOut() {
+        mAuth.signOut();
+        Toast.makeText(this, "Logged out successfully", Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(HomeActivity.this, SignIn.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
+    }
+
+    private void initializeNotifications() {
+        try {
+            notificationSwitch.setChecked(true);
+            Toast.makeText(this, "Notifications enabled", Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            android.util.Log.e("HomeActivity", "Error initializing notifications", e);
+        }
+    }
+
+    private void checkNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                android.util.Log.w("HomeActivity", "Notification permission not granted");
+                requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS},
+                        NOTIFICATION_PERMISSION_REQUEST_CODE);
+            } else {
+                android.util.Log.d("HomeActivity", "Notification permission already granted");
+                initializeNotifications();
+            }
+        } else {
+            initializeNotifications();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == NOTIFICATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                initializeNotifications();
+            } else {
+                Toast.makeText(this, "Notifications permission denied", Toast.LENGTH_SHORT).show();
+                notificationSwitch.setChecked(false);
+            }
+        }
+    }
+
+    private void navigateToMoodTracker() {
+        Log.d("Navigation", "Navigating to MoodTrackerFragment");
+        if (findViewById(R.id.fragmentContainer) != null) {
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragmentContainer, new MoodTrackerFragment()) // Directly replace
+                    .addToBackStack(null) // Optional: Add to back stack
+                    .commit();
+            // Update bottom navigation selection visually
+            if (bottomNavigationView != null) {
+                bottomNavigationView.setSelectedItemId(R.id.nav_therapy); // Assuming this is the parent section
+            }
+        } else {
+            Log.e("Navigation", "fragmentContainer not found!");
+        }
+    }
+
+    // Separate method for handling bottom navigation clicks
+    private void handleBottomNavigation(int itemId) {
+        Fragment selectedFragment = null;
+
+        if (itemId == R.id.nav_analytics) {
+            selectedFragment = new AnalyticsFragment(); // Ensure this handles login check internally if needed
+        } else if (itemId == R.id.nav_home) {
+            selectedFragment = new HomeFragment();
+        } else if (itemId == R.id.nav_ai) {
+            selectedFragment = new AiFragment();
+        } else if (itemId == R.id.nav_therapy) {
+             // If MoodTracker is the target, navigate specifically
+             // Otherwise, load the main TherapyFragment
+             // For simplicity now, TherapyFragment loads first, then can navigate
+             selectedFragment = new TherapyFragment();
+        } else if (itemId == R.id.nav_chat) {
+            selectedFragment = new ChatListFragment();
+        }
+
+        if (selectedFragment != null) {
+            // Replace the fragment container with the selected fragment
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragmentContainer, selectedFragment)
+                    .commit();
+        } else {
+             Log.w("HomeActivity", "No fragment selected for item ID: " + itemId);
+         }
+    }
+
+    // Add this method to handle intent extras
+    private void handleIntent(Intent intent) {
+        Log.d("NotificationDebug", "handleIntent called");
+        if (intent != null && intent.hasExtra("fragment")) {
+            String fragmentToLoad = intent.getStringExtra("fragment");
+            Log.d("NotificationDebug", "Intent has fragment extra: " + fragmentToLoad);
+            if ("mood_tracker".equals(fragmentToLoad)) {
+                Log.d("NotificationDebug", "Navigating to MoodTrackerFragment");
+                navigateToMoodTracker();
+                // Update bottom nav selection
+                if (bottomNavigationView != null) {
+                    // Assuming MoodTracker is logically under 'Therapy'
+                    bottomNavigationView.setSelectedItemId(R.id.nav_therapy);
+                }
+                // Prevent reloading the same fragment if the listener also triggers
+                // Consider clearing the intent extra if needed, but be careful with activity lifecycle
+                // getIntent().removeExtra("fragment");
+            } else {
+                Log.d("NotificationDebug", "Fragment extra value not recognized: " + fragmentToLoad + ", loading default");
+                // Load default fragment if extra value is not recognized
+                loadDefaultFragment();
+            }
+        } else {
+            Log.d("NotificationDebug", "Intent has no fragment extra, loading default");
+            // Load default fragment if no extra is present
+            loadDefaultFragment();
+        }
+    }
+
+    // Add a method to load the default fragment
+    private void loadDefaultFragment() {
+        if (findViewById(R.id.fragmentContainer) != null) {
+            if (getSupportFragmentManager().findFragmentById(R.id.fragmentContainer) == null) {
+                Log.d("NotificationDebug", "Loading default HomeFragment");
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragmentContainer, new HomeFragment())
+                        .commit();
+                // Ensure bottom nav reflects this
+                if (bottomNavigationView != null) {
+                    bottomNavigationView.setSelectedItemId(R.id.nav_home);
+                }
+            }
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent); // Update the activity's intent
+        Log.d("NotificationDebug", "onNewIntent called");
+        handleIntent(intent); // Handle the new intent
+    }
+}

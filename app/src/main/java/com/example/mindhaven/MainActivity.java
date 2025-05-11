@@ -1,0 +1,131 @@
+package com.example.mindhaven;
+
+import android.Manifest;
+import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
+import android.os.Bundle;
+import android.provider.Settings;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.Toast;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.FirebaseDatabase;
+
+public class MainActivity extends AppCompatActivity {
+    private static final int NOTIFICATION_PERMISSION_REQUEST_CODE = 1001;
+    private FirebaseAuth mAuth;
+    private FirebaseDatabase rtDatabase;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        mAuth = FirebaseAuth.getInstance();
+        rtDatabase = FirebaseDatabase.getInstance();
+
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) !=
+                    PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 100);
+            }
+        }
+
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            android.app.AlarmManager alarmManager = (android.app.AlarmManager) getSystemService(Context.ALARM_SERVICE);
+            if (!alarmManager.canScheduleExactAlarms()) {
+                Intent intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
+                intent.setData(android.net.Uri.parse("package:" + getPackageName()));
+                startActivity(intent);
+            }
+        }
+
+
+
+        checkAndRequestNotificationPermission();
+
+        Button btnNext = findViewById(R.id.btn_next);
+        btnNext.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, SignIn.class);
+            startActivity(intent);
+        });
+
+        /*findViewById(R.id.chaticon).setOnClickListener(v -> {
+            startActivity(new Intent(this, com.secure.letschat.MainActivity.class));
+        });*/
+
+        handleAuthenticationState();
+
+        /*
+        findViewById(R.id.card_books).setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, BooksActivity.class);
+            startActivity(intent);
+        });
+
+        findViewById(R.id.card_music).setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, MusicActivity.class);
+            startActivity(intent);
+        });
+
+        findViewById(R.id.card_movies).setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, MoviesActivity.class);
+            startActivity(intent);
+        });*/
+    }
+
+    private void handleAuthenticationState() {
+        if (mAuth.getCurrentUser() != null) {
+            // User is signed in, go to home activity
+            Intent intent = new Intent(MainActivity.this, HomeActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+            finish();
+        }
+    }
+
+    private void checkAndRequestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                        NOTIFICATION_PERMISSION_REQUEST_CODE);
+            } else {
+                //initializeNotifications();
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == NOTIFICATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.d("MainActivity", "Notification permission granted");
+                //initializeNotifications();
+            } else {
+                Log.w("MainActivity", "Notification permission denied");
+            }
+        }
+    }
+
+    /*private void initializeNotifications() {
+        MoodNotificationManager moodNotificationManager = new MoodNotificationManager(this);
+        moodNotificationManager.scheduleNotification("daily");
+    }*/
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        handleAuthenticationState();
+    }
+}

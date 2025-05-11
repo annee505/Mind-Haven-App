@@ -1,0 +1,277 @@
+package com.example.mindhaven;
+import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ProgressBar;
+import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
+public class AnonymousChatActivity extends AppCompatActivity implements UserAdapter.OnUserClickListener {
+    private static final String TAG = "AnonymousChatActivity";
+    private static final String ANONYMOUS_CHAT_ROOM = "anonymous_chat_room";
+
+    private RecyclerView recyclerView;
+    private RecyclerView userRecyclerView;
+    private ChatAdapter chatAdapter;
+    private UserAdapter userAdapter;
+    private EditText messageInput;
+    private EditText searchInput;
+    private Button sendButton;
+    private ProgressBar progressBar;
+    private CardView anonymousChatFolder;
+    private View chatContainer;
+    private View inputLayout;
+    private FirebaseFirestore db;
+    private List<ChatMessage> chatMessages;
+    private List<UserProfile> users;
+    private String currentUserId;
+    private String selectedUserId;
+    private ChatViewModel chatViewModel;
+    private String sessionUsername;
+
+    private String generateAnonymousUsername() {
+        String[] adjectives = {"Happy", "Brave", "Calm", "Eager", "Gentle", "Kind", "Lucky", "Proud", "Silly", "Wise"};
+        String[] nouns = {"Lion", "Owl", "Dolphin", "Tiger", "Eagle", "Wolf", "Bear", "Fox", "Hawk", "Shark"};
+        Random random = new Random();
+        return adjectives[random.nextInt(adjectives.length)] + " " + nouns[random.nextInt(nouns.length)];
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        sessionUsername = generateAnonymousUsername();
+        setContentView(R.layout.activity_anonymous_chat);
+
+        db = FirebaseFirestore.getInstance();
+
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null) {
+            Toast.makeText(this, "You must be logged in to use chat", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
+        currentUserId = currentUser.getUid();
+
+        initializeViews();
+        setupRecyclerViews();
+        setupSearchListener();
+        loadUsers();
+        chatViewModel = new ViewModelProvider(this).get(ChatViewModel.class);
+        chatViewModel.getMessages().observe(this, new Observer<List<ChatMessage>>() {
+            @Override
+            public void onChanged(List<ChatMessage> msgs) {
+                chatMessages.clear();
+                chatMessages.addAll(msgs);
+                chatAdapter.notifyDataSetChanged();
+                if (!msgs.isEmpty()) recyclerView.scrollToPosition(msgs.size() - 1);
+                // Clear input after messages load to remove any lingering text
+                if (messageInput != null) {
+                    messageInput.setText("");
+                }
+            }
+        });
+        chatViewModel.isLoading().observe(this, isLoading ->
+                progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE)
+        );
+        sendButton.setOnClickListener(v -> {
+            String text = messageInput.getText().toString().trim();
+            if (text.isEmpty()) return;
+            if (selectedUserId == null) {
+                // Enhanced anonymous chat message sending
+                ChatMessage newMessage = new ChatMessage(
+                    currentUserId, 
+                    sessionUsername, 
+                    text, 
+                    System.currentTimeMillis(), 
+                    true
+                );
+                newMessage.setStatus(ChatMessage.MessageStatus.SENDING);
+                chatMessages.add(newMessage);
+                chatAdapter.notifyItemInserted(chatMessages.size() - 1);
+                recyclerView.scrollToPosition(chatMessages.size() - 1);
+                
+                Map<String, Object> data = new HashMap<>();
+                data.put("text", text);
+                data.put("userId", currentUserId);
+                data.put("username", sessionUsername);
+                data.put("timestamp", System.currentTimeMillis());
+                
+                db.collection("chats").document(ANONYMOUS_CHAT_ROOM)
+                    .collection("messages")
+                    .add(data)
+                    .addOnSuccessListener(documentReference -> {
+                        newMessage.setStatus(ChatMessage.MessageStatus.SENT);
+                        chatAdapter.notifyItemChanged(chatMessages.size() - 1);
+                    })
+                    .addOnFailureListener(e -> {
+                        chatMessages.remove(newMessage);
+                        chatAdapter.notifyDataSetChanged();
+                        Toast.makeText(AnonymousChatActivity.this, "Failed to send message", Toast.LENGTH_SHORT).show();
+                    });
+            } else {
+                // Private chat uses viewModel
+                chatViewModel.sendMessage(false, currentUserId, selectedUserId, text);
+            }
+            messageInput.setText("");
+        });
+    }
+
+    private void initializeViews() {
+        try {
+            recyclerView = findViewById(R.id.recyclerView);
+            userRecyclerView = findViewById(R.id.userRecyclerView);
+            messageInput = findViewById(R.id.messageInput);
+            searchInput = findViewById(R.id.searchInput);
+            sendButton = findViewById(R.id.sendButton);
+            progressBar = findViewById(R.id.progressBar);
+            anonymousChatFolder = findViewById(R.id.anonymousChatFolder);
+            chatContainer = findViewById(R.id.chatContainer);
+            inputLayout = findViewById(R.id.inputLayout);
+
+            // Debug that the click listener was set correctly
+            Log.d(TAG, "Click listeners set up. anonymousChatFolder: " +
+                    (anonymousChatFolder != null ? "found" : "null"));
+
+            anonymousChatFolder.setOnClickListener(v -> {
+                Log.d(TAG, "Anonymous chat folder clicked");
+                Toast.makeText(this, "Opening anonymous chat...", Toast.LENGTH_SHORT).show();
+                openAnonymousChat();
+            });
+        } catch (Exception e) {
+            Log.e(TAG, "Error initializing views", e);
+            Toast.makeText(this, "Error setting up chat interface", Toast.LENGTH_SHORT).show();
+            finish();
+        }
+    }
+
+    private void setupRecyclerViews() {
+        // Chat messages
+        chatMessages = new ArrayList<>();
+        chatAdapter = new ChatAdapter(chatMessages);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(chatAdapter);
+
+        // User list
+        users = new ArrayList<>();
+        userAdapter = new UserAdapter(users, this);
+        userRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        userRecyclerView.setAdapter(userAdapter);
+    }
+
+    private void setupSearchListener() {
+        searchInput.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String searchQuery = s.toString().toLowerCase().trim();
+                if (!searchQuery.isEmpty()) {
+                    userRecyclerView.setVisibility(View.VISIBLE);
+                    chatContainer.setVisibility(View.GONE);
+                    filterUsers(searchQuery);
+                } else {
+                    userRecyclerView.setVisibility(View.GONE);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+    }
+
+    private void loadUsers() {
+        progressBar.setVisibility(View.VISIBLE);
+        db.collection("users").get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    progressBar.setVisibility(View.GONE);
+                    users.clear();
+                    for (DocumentSnapshot document : queryDocumentSnapshots) {
+                        UserProfile user = document.toObject(UserProfile.class);
+                        if (user != null && !user.getUserId().equals(currentUserId)) {
+                            users.add(user);
+                        }
+                    }
+                    userAdapter.notifyDataSetChanged();
+                })
+                .addOnFailureListener(e -> {
+                    progressBar.setVisibility(View.GONE);
+                    Log.e(TAG, "Error loading users", e);
+                    Toast.makeText(AnonymousChatActivity.this, "Could not load users", Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    private void filterUsers(String query) {
+        List<UserProfile> filteredUsers = new ArrayList<>();
+        for (UserProfile user : users) {
+            if (user.getUsername().toLowerCase().contains(query) ||
+                    user.getDisplayName().toLowerCase().contains(query)) {
+                filteredUsers.add(user);
+            }
+        }
+        userAdapter.updateList(filteredUsers);
+    }
+
+    @Override
+    public void onUserClick(UserProfile user) {
+        selectedUserId = user.getUserId();
+        userRecyclerView.setVisibility(View.GONE);
+        chatContainer.setVisibility(View.VISIBLE);
+        chatViewModel.startPrivateChat(currentUserId, user.getUserId());
+    }
+
+    private void openAnonymousChat() {
+        sessionUsername = generateAnonymousUsername();
+        chatContainer.setVisibility(View.VISIBLE);
+        userRecyclerView.setVisibility(View.GONE);
+        inputLayout.setVisibility(View.VISIBLE);
+        
+        // Load anonymous chat messages
+        db.collection("chats").document(ANONYMOUS_CHAT_ROOM)
+                .collection("messages")
+                .orderBy("timestamp", Query.Direction.ASCENDING)
+                .addSnapshotListener((value, error) -> {
+                    if (error != null) {
+                        Log.w(TAG, "Listen failed.", error);
+                        return;
+                    }
+
+                    chatMessages.clear();
+                    for (DocumentSnapshot doc : value.getDocuments()) {
+                        ChatMessage message = new ChatMessage(
+                                doc.getString("userId"),
+                                doc.getString("username"),
+                                doc.getString("text"),
+                                doc.getLong("timestamp"),
+                                doc.getString("userId").equals(currentUserId)
+                        );
+                        chatMessages.add(message);
+                    }
+                    chatAdapter.notifyDataSetChanged();
+                    if (!chatMessages.isEmpty()) {
+                        recyclerView.scrollToPosition(chatMessages.size() - 1);
+                    }
+                });
+    }
+}

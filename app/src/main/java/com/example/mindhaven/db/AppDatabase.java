@@ -1,0 +1,128 @@
+package com.example.mindhaven.db;
+
+import android.content.Context;
+import android.util.Log;
+
+import androidx.annotation.NonNull;
+import androidx.room.Database;
+import androidx.room.Room;
+import androidx.room.RoomDatabase;
+import androidx.sqlite.db.SupportSQLiteDatabase;
+
+import com.example.mindhaven.models.MeditationAudio;
+import com.example.mindhaven.utils.ResourceHelper;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+@Database(entities = {MeditationAudio.class}, version = 1, exportSchema = false)
+public abstract class AppDatabase extends RoomDatabase {
+
+    private static final String TAG = "AppDatabase";
+    private static final String DATABASE_NAME = "mindhaven_db";
+    private static AppDatabase instance;
+
+    // Create an ExecutorService with a fixed thread pool
+    private static final ExecutorService databaseWriteExecutor =
+            Executors.newFixedThreadPool(4);
+
+    public abstract MeditationAudioDao meditationAudioDao();
+
+    public static AppDatabase getDatabase(final Context context) {
+        if (instance == null) {
+            synchronized (AppDatabase.class) {
+                if (instance == null) {
+                    instance = Room.databaseBuilder(context.getApplicationContext(),
+                                    AppDatabase.class, DATABASE_NAME)
+                            .addCallback(new Callback() {
+                                @Override
+                                public void onCreate(@NonNull SupportSQLiteDatabase db) {
+                                    super.onCreate(db);
+                                    // Populate database when created for the first time
+                                    databaseWriteExecutor.execute(() -> {
+                                        populateInitialData(instance);
+                                    });
+                                }
+                            })
+                            .build();
+                }
+            }
+        }
+        return instance;
+    }
+
+    private static void populateInitialData(AppDatabase db) {
+        Log.d(TAG, "Populating database with initial data");
+        MeditationAudioDao dao = db.meditationAudioDao();
+
+        // Check if the database is already populated
+        if (dao.getCount() > 0) {
+            Log.d(TAG, "Database already has data, skipping initialization");
+            return;
+        }
+
+        // Create initial data
+        try {
+            MeditationAudio[] meditations = {
+                    new MeditationAudio(
+                            "Deep Sleep Meditation",
+                            "A calming forest ambience to help you fall into a deep, restful sleep.",
+                            "20:00",
+                            ResourceHelper.SLEEP_MEDITATION,
+                            "Sleep",
+                            true,
+                            false
+                    ),
+                    new MeditationAudio(
+                            "Bedtime Relaxation",
+                            "Gentle flowing water sounds to prepare your mind and body for sleep.",
+                            "15:00",
+                            ResourceHelper.BEDTIME_RELAXATION,
+                            "Sleep",
+                            true,
+                            false
+                    ),
+                    new MeditationAudio(
+                            "Stress Relief",
+                            "Summer afternoon ambience to reduce stress and anxiety.",
+                            "10:00",
+                            ResourceHelper.STRESS_RELIEF,
+                            "Stress",
+                            true,
+                            false
+                    ),
+                    new MeditationAudio(
+                            "Anxiety Relief",
+                            "Peaceful meadow ambience to relieve anxious thoughts and feelings.",
+                            "12:00",
+                            ResourceHelper.ANXIETY_RELIEF,
+                            "Anxiety",
+                            true,
+                            false
+                    ),
+                    new MeditationAudio(
+                            "Focus and Concentration",
+                            "Soft wind through trees to sharpen your mind and improve concentration.",
+                            "15:00",
+                            ResourceHelper.FOCUS_CONCENTRATION,
+                            "Focus",
+                            true,
+                            false
+                    )
+            };
+
+            // Insert all meditations
+            for (MeditationAudio meditation : meditations) {
+                dao.insert(meditation);
+                Log.d(TAG, "Inserted meditation: " + meditation.getTitle());
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error populating database: " + e.getMessage());
+        }
+    }
+
+    // Get the database write executor
+    public static ExecutorService getDatabaseWriteExecutor() {
+        return databaseWriteExecutor;
+    }
+}

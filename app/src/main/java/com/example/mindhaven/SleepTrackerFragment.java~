@@ -1,0 +1,167 @@
+package com.example.mindhaven;
+
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.RatingBar;
+import android.widget.TextView;
+import android.widget.TimePicker;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+
+import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class SleepTrackerFragment extends Fragment {
+    private RatingBar sleepQualityRating;
+    private TimePicker bedtimePicker;
+    private TimePicker wakeTimePicker;
+    private EditText notesInput;
+    private TextView averageQualityText;
+    private TextView averageDurationText;
+    private TextView sleepScoreText;
+    private TextView consistencyScoreText;
+    private TextView sleepDebtText;
+    private LineChart sleepChart;
+    private FirebaseFirestore db;
+    private FirebaseAuth mAuth;
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_sleep_tracker, container, false);
+        initializeViews(view);
+        setupCharts();
+        loadSleepAnalytics();
+
+        Button saveButton = view.findViewById(R.id.saveSleepButton);
+        saveButton.setOnClickListener(v -> saveSleepData());
+
+        return view;
+    }
+
+    private void initializeViews(View view) {
+        db = FirebaseFirestore.getInstance();
+        mAuth = FirebaseAuth.getInstance();
+
+        sleepQualityRating = view.findViewById(R.id.sleepQualityRating);
+        bedtimePicker = view.findViewById(R.id.bedtimePicker);
+        wakeTimePicker = view.findViewById(R.id.wakeTimePicker);
+        notesInput = view.findViewById(R.id.sleepNotes);
+        averageQualityText = view.findViewById(R.id.averageQualityText);
+        averageDurationText = view.findViewById(R.id.averageDurationText);
+        sleepScoreText = view.findViewById(R.id.sleepScoreText);
+        consistencyScoreText = view.findViewById(R.id.consistencyScoreText);
+        sleepDebtText = view.findViewById(R.id.sleepDebtText);
+        sleepChart = view.findViewById(R.id.sleepChart);
+    }
+
+    private void setupCharts() {
+        sleepChart.getDescription().setEnabled(false);
+        sleepChart.setTouchEnabled(true);
+        sleepChart.setDragEnabled(true);
+        sleepChart.setScaleEnabled(true);
+    }
+
+    private void saveSleepData() {
+        if (mAuth.getCurrentUser() == null) return;
+
+        Calendar bedtime = Calendar.getInstance();
+        bedtime.set(Calendar.HOUR_OF_DAY, bedtimePicker.getHour());
+        bedtime.set(Calendar.MINUTE, bedtimePicker.getMinute());
+        Calendar waketime = Calendar.getInstance();
+        waketime.set(Calendar.HOUR_OF_DAY, wakeTimePicker.getHour());
+        waketime.set(Calendar.MINUTE, wakeTimePicker.getMinute());
+
+        float duration = calculateDuration(bedtime, waketime);
+        float quality = sleepQualityRating.getRating();
+
+        Map<String, Object> sleepData = new HashMap<>();
+        sleepData.put("quality", quality);
+        sleepData.put("duration", duration);
+        sleepData.put("bedtime", bedtime.getTime());
+        sleepData.put("waketime", waketime.getTime());
+        sleepData.put("notes", notesInput.getText().toString());
+        sleepData.put("timestamp", System.currentTimeMillis());
+
+        db.collection("users")
+                .document(mAuth.getCurrentUser().getUid())
+                .collection("sleep_tracking")
+                .add(sleepData)
+                .addOnSuccessListener(documentReference -> {
+                    loadSleepAnalytics();
+                });
+    }
+
+    private float calculateDuration(Calendar bedtime, Calendar waketime) {
+        long diff = waketime.getTimeInMillis() - bedtime.getTimeInMillis();
+        return diff / (1000 * 60 * 60f); // Convert to hours
+    }
+
+    private void loadSleepAnalytics() {
+        if (mAuth.getCurrentUser() == null) return;
+
+        db.collection("users")
+                .document(mAuth.getCurrentUser().getUid())
+                .collection("sleep_tracking")
+                .orderBy("timestamp", Query.Direction.DESCENDING)
+                .limit(30)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    List<Entry> qualityEntries = new ArrayList<>();
+                    List<Entry> durationEntries = new ArrayList<>();
+
+                    float totalQuality = 0;
+                    float totalDuration = 0;
+                    int count = queryDocumentSnapshots.size();
+
+                    for (int i = 0; i < count; i++) {
+                        Map<String, Object> data = queryDocumentSnapshots.getDocuments().get(i).getData();
+                        float quality = ((Number) data.get("quality")).floatValue();
+                        float duration = ((Number) data.get("duration")).floatValue();
+                        qualityEntries.add(new Entry(i, quality));
+                        durationEntries.add(new Entry(i, duration));
+                        totalQuality += quality;
+                        totalDuration += duration;
+                    }
+
+                    updateAnalyticsDisplay(totalQuality / count, totalDuration / count);
+                    updateCharts(qualityEntries, durationEntries);
+                });
+    }
+
+    private void updateAnalyticsDisplay(float avgQuality, float avgDuration) {
+        averageQualityText.setText(String.format("Average Sleep Quality: %.1f", avgQuality));
+        averageDurationText.setText(String.format("Average Sleep Duration: %.1f hours", avgDuration));
+        // Add additional analytics updates if needed
+    }
+
+    private void updateCharts(List<Entry> qualityEntries, List<Entry> durationEntries) {
+        LineDataSet qualityDataSet = new LineDataSet(qualityEntries, "Sleep Quality");
+        qualityDataSet.setColor(getResources().getColor(android.R.color.holo_blue_dark));
+        qualityDataSet.setCircleColor(getResources().getColor(android.R.color.holo_blue_dark));
+
+        LineDataSet durationDataSet = new LineDataSet(durationEntries, "Sleep Duration");
+        durationDataSet.setColor(getResources().getColor(android.R.color.holo_green_dark));
+        durationDataSet.setCircleColor(getResources().getColor(android.R.color.holo_green_dark));
+
+        LineData lineData = new LineData(qualityDataSet, durationDataSet);
+        sleepChart.setData(lineData);
+        sleepChart.invalidate();
+    }
+}

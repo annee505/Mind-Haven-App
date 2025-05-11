@@ -1,0 +1,82 @@
+package com.example.mindhaven;
+
+import androidx.media3.common.Label;
+
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
+
+public class MessageCell extends ListCell<Message> {
+    private final String currentUsername;
+    private final VBox messageBox;
+    private final Label messageLabel;
+    private final Label senderLabel;
+    private final Label timeLabel;
+    private final HBox container;
+
+    public MessageCell(String currentUsername) {
+        this.currentUsername = currentUsername;
+
+        // Create message content labels
+        messageLabel = new Label();
+        messageLabel.setWrapText(true);
+        messageLabel.getStyleClass().add("message-text");
+
+        senderLabel = new Label();
+        senderLabel.getStyleClass().add("sender-name");
+
+        timeLabel = new Label();
+        timeLabel.getStyleClass().add("time-label");
+
+        // Create message box
+        messageBox = new VBox(5, senderLabel, messageLabel, timeLabel);
+        messageBox.setPadding(new Insets(8));
+        messageBox.getStyleClass().add("message-box");
+
+        // Create container for alignment
+        container = new HBox();
+        container.setPadding(new Insets(5, 10, 5, 10));
+        container.setSpacing(10);
+
+        setContentDisplay(javafx.scene.control.ContentDisplay.GRAPHIC_ONLY);
+    }
+
+    @Override
+    protected void updateItem(Message message, boolean empty) {
+        super.updateItem(message, empty);
+
+        if (empty || message == null) {
+            setGraphic(null);
+        } else {
+            // Set message content
+            messageLabel.setText(message.getContent());
+            senderLabel.setText(message.getSender());
+            timeLabel.setText(message.getFormattedTime());
+
+            // Check if message is from current user
+            boolean isCurrentUser = message.getSender().equals(currentUsername);
+
+            // Apply appropriate styles
+            if (isCurrentUser) {
+                container.setAlignment(Pos.CENTER_RIGHT);
+                messageBox.getStyleClass().remove("other-message");
+                messageBox.getStyleClass().add("my-message");
+            } else {
+                container.setAlignment(Pos.CENTER_LEFT);
+                messageBox.getStyleClass().remove("my-message");
+                messageBox.getStyleClass().add("other-message");
+            }
+
+            // Clear and add the message box to container
+            container.getChildren().clear();
+            container.getChildren().add(messageBox);
+
+            setGraphic(container);
+        }
+    }
+}

@@ -1,0 +1,33 @@
+/*package com.example.mindhaven;
+
+import android.app.NotificationManager;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.util.Log;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+
+public class MoodNotificationReceiver extends BroadcastReceiver {
+    private static final String TAG = "MoodNotificationReceiver";
+
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        Log.d(TAG, "Received alarm intent: " + intent.getAction());
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, MoodNotificationManager.CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle("Mood Check")
+            .setContentText(MoodNotificationManager.getRandomMessage())
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true);
+
+        NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        if (notificationManager != null) {
+            notificationManager.notify(MoodNotificationManager.NOTIFICATION_ID, builder.build());
+        }
+
+        ((MindHavenApp) context.getApplicationContext())
+            .getNotificationManager().reInitializeNotifications();
+    }
+}*/
