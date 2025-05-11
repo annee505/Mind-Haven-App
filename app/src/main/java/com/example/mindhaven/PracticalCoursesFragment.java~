@@ -10,7 +10,8 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.lifecycle.ViewModelProvider;
+
+import com.example.mindhaven.model.Course;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,7 +21,7 @@ public class PracticalCoursesFragment extends Fragment {
     private RecyclerView coursesRecycler;
     private com.example.mindhaven.adapter.CourseAdapter adapter;
     private View emptyState;
-    private List<PracticalCourse> courses;
+    private List<Course> courses; // Changed to List<Course>
 
     @Nullable
     @Override
@@ -55,7 +56,7 @@ public class PracticalCoursesFragment extends Fragment {
                 "Priority Matrix Creation",
                 "Boundary Setting Practice"
         );
-        courses.add(new PracticalCourse(
+        courses.add(new Course( // Ensure you're using the correct class name, Course instead of PracticalCourse
                 "Stress Management",
                 "Learn effective techniques to manage daily stress",
                 stressLessons,
@@ -64,7 +65,6 @@ public class PracticalCoursesFragment extends Fragment {
         ));
 
         // Add more courses as needed
-        // For example: Mindfulness Course, etc.
     }
 
     private void checkIfEmpty() {

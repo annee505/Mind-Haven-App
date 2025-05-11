@@ -63,7 +63,8 @@ public class PracticalCoursesFragment extends Fragment {
                 stressExercises,
                 "Beginner"
         ));
-
+        git add .
+        git commit -m "Initial commit"
         // Add more courses as needed
     }
 
