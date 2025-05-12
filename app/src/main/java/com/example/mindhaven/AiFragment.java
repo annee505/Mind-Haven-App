@@ -143,7 +143,7 @@ public class AiFragment extends Fragment {
                 true ,
                 "user"
         );
-        userMessage.setUserId(userId); 
+        userMessage.setUserId(userId);
         userMessage.setUsername("You");
 
         chatMessages.add(userMessage);
