@@ -1,4 +1,3 @@
-
 {
   "rules": {
     "users": {
@@ -26,6 +25,10 @@
     "meditation_sessions": {
       ".read": "auth != null",
       ".write": "auth != null"
+    },
+    "favorites": {
+      ".read": "auth != null && query.whereEqualTo('userId', auth.uid)",
+      ".write": "auth != null && request.resource.data.userId == auth.uid"
     }
   },
   "storage": {

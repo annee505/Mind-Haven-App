@@ -16,6 +16,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.FirebaseFirestoreException;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -144,18 +145,23 @@ public class FirestoreService {
     /**
      * Get all favorite recommendations for the current user
      */
-    public void getFavorites(final FirestoreCallback<List<Recommendation>> callback) {
+    public void getFavorites(String type, FirestoreCallback<List<Recommendation>> callback) {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser == null) {
-            Log.e(TAG, "Cannot get favorites: User not logged in");
-            callback.onError(new Exception("User not logged in"));
+            callback.onError(new Exception("No authenticated user"));
             return;
         }
 
-        Log.d(TAG, "Getting favorites for user: " + currentUser.getUid());
-
-        db.collection(FAVORITES_COLLECTION)
+        Query query = db.collection(FAVORITES_COLLECTION)
                 .whereEqualTo("userId", currentUser.getUid())
-                .orderBy("dateAdded", Query.Direction.DESCENDING)
+                .whereEqualTo("isFavorite", true)
+                .orderBy("dateAdded", Query.Direction.DESCENDING);
+
+        if (type != null) {
+            query = query.whereEqualTo("type", type);
+        }
+
+        query
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     List<Recommendation> favorites = new ArrayList<>();
@@ -167,23 +173,23 @@ public class FirestoreService {
                             String title = document.getString("title");
                             String description = document.getString("description");
                             String mood = document.getString("mood");
-                            String type = document.getString("type");
+                            String typeValue = document.getString("type");
                             Boolean isFavorite = document.getBoolean("isFavorite");
                             Date dateAdded = document.getDate("dateAdded");
                             String userId = document.getString("userId");
 
                             // Log each document's key fields for debugging
                             Log.d(TAG, "Processing favorite - ID: " + id + ", Title: " + title +
-                                    ", Type: " + type + ", Favorite: " + isFavorite);
+                                    ", Type: " + typeValue + ", Favorite: " + isFavorite);
 
                             // Verify required fields exist
-                            if (title == null || type == null) {
+                            if (title == null || typeValue == null) {
                                 Log.w(TAG, "Skipping favorite with missing required fields. ID: " + id);
                                 continue;
                             }
 
                             Recommendation recommendation = new Recommendation(
-                                    id, title, description, mood, type,
+                                    id, title, description, mood, typeValue,
                                     isFavorite != null ? isFavorite : true,
                                     dateAdded, userId
                             );
@@ -200,6 +206,10 @@ public class FirestoreService {
                 })
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Error getting favorites: " + e.getMessage(), e);
+                    if (e instanceof FirebaseFirestoreException) {
+                        FirebaseFirestoreException ffe = (FirebaseFirestoreException) e;
+                        Log.e(TAG, "Firestore error code: " + ffe.getCode());
+                    }
                     callback.onError(e);
                 });
     }
