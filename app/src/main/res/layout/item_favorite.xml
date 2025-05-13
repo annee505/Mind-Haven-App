@@ -1,14 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginHorizontal="16dp"
-    android:layout_marginVertical="8dp"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="4dp"
-    app:cardBackgroundColor="@android:color/white">
+    android:layout_margin="8dp"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="4dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -16,75 +12,43 @@
         android:padding="16dp">
 
         <ImageView
-            android:id="@+id/image_type_icon"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:src="@drawable/ic_book"
-            app:layout_constraintTop_toTopOf="parent"
+            android:id="@+id/image_favorite_type"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             app:layout_constraintStart_toStartOf="parent"
-            app:tint="@color/colorPrimary" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/text_favorite_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Favorite Item Title"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:textColor="@color/colorPrimary"
-            android:layout_marginStart="12dp"
-            android:layout_marginEnd="8dp"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toEndOf="@id/image_type_icon"
-            app:layout_constraintEnd_toStartOf="@id/button_remove" />
-
-        <ImageButton
-            android:id="@+id/button_remove"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:src="@drawable/ic_favorite"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:tint="@color/colorAccent" />
+            app:layout_constraintEnd_toStartOf="@id/button_remove_favorite"
+            app:layout_constraintStart_toEndOf="@id/image_favorite_type"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/text_favorite_description"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Description of the favorite item. It could include details about why this was recommended to you initially."
-            android:textSize="14sp"
-            android:textColor="@android:color/darker_gray"
-            android:maxLines="3"
-            android:ellipsize="end"
-            android:layout_marginTop="8dp"
-            app:layout_constraintTop_toBottomOf="@id/text_favorite_title"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="16dp"
+            app:layout_constraintEnd_toStartOf="@id/button_remove_favorite"
+            app:layout_constraintStart_toEndOf="@id/image_favorite_type"
+            app:layout_constraintTop_toBottomOf="@id/text_favorite_title" />
 
-        <TextView
-            android:id="@+id/text_favorite_mood"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Mood: happy"
-            android:textSize="12sp"
-            android:textStyle="italic"
-            android:textColor="@color/colorAccent"
-            android:layout_marginTop="8dp"
-            app:layout_constraintTop_toBottomOf="@id/text_favorite_description"
-            app:layout_constraintStart_toStartOf="parent" />
-
-        <TextView
-            android:id="@+id/text_favorite_date"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Added: Jan 01, 2023"
-            android:textSize="12sp"
-            android:textStyle="italic"
-            android:textColor="@android:color/darker_gray"
-            android:layout_marginTop="8dp"
-            app:layout_constraintTop_toBottomOf="@id/text_favorite_description"
-            app:layout_constraintEnd_toEndOf="parent" />
+        <ImageButton
+            android:id="@+id/button_remove_favorite"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_remove_favorite"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.cardview.widget.CardView>

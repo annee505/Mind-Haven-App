@@ -1,6 +1,7 @@
 package com.example.mindhaven;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -17,21 +18,14 @@ import com.google.firebase.auth.FirebaseUser;
 
 import java.util.ArrayList;
 import java.util.List;
-
-/**
- * Activity to display user favorites
- */
 public class FavoritesActivity extends AppCompatActivity implements FavoritesAdapter.OnFavoriteClickListener {
+    private static final String TAG = "FavoritesDebug";
 
     private RecyclerView recyclerFavorites;
-    private FavoritesAdapter adapter;
     private ProgressBar loadingIndicator;
-    private TextView emptyText;
-    private ChipGroup filterChipGroup;
-    private Chip allChip, booksChip, musicChip, moviesChip;
-
+    private View emptyStateView;
+    private FavoritesAdapter adapter;
     private FirestoreService firestoreService;
-    private FirebaseUser currentUser;
     private List<Recommendation> favorites = new ArrayList<>();
 
     @Override
@@ -39,67 +33,83 @@ public class FavoritesActivity extends AppCompatActivity implements FavoritesAda
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_favorites);
 
-        // Initialize Firebase
-        currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        firestoreService = new FirestoreService();
+        // Debug: Check authentication status
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser != null) {
+            Log.d(TAG, "User is authenticated: " + currentUser.getUid());
+        } else {
+            Log.e(TAG, "NO USER AUTHENTICATED in FavoritesActivity!");
+        }
 
         // Initialize views
         recyclerFavorites = findViewById(R.id.recycler_favorites);
         loadingIndicator = findViewById(R.id.loading_indicator);
-        emptyText = findViewById(R.id.empty_text);
-        filterChipGroup = findViewById(R.id.filter_chip_group);
-        allChip = findViewById(R.id.chip_all);
-        booksChip = findViewById(R.id.chip_books);
-        musicChip = findViewById(R.id.chip_music);
-        moviesChip = findViewById(R.id.chip_movies);
+        emptyStateView = findViewById(R.id.empty_state);
 
-        // Set up RecyclerView
+        // Debug: Check if views were found
+        Log.d(TAG, "recyclerFavorites is " + (recyclerFavorites != null ? "found" : "null"));
+        Log.d(TAG, "loadingIndicator is " + (loadingIndicator != null ? "found" : "null"));
+        Log.d(TAG, "emptyStateView is " + (emptyStateView != null ? "found" : "null"));
+
+        // Initialize Firestore service
+        firestoreService = new FirestoreService();
+
+        // Set up recycler view with LinearLayoutManager
         recyclerFavorites.setLayoutManager(new LinearLayoutManager(this));
+
+        // Initialize adapter immediately with empty list (important)
         adapter = new FavoritesAdapter(this, favorites, this);
         recyclerFavorites.setAdapter(adapter);
 
-        // Set up chip filters
-        filterChipGroup.setOnCheckedChangeListener((group, checkedId) -> {
-            if (checkedId == R.id.chip_all) {
-                loadAllFavorites();
-            } else if (checkedId == R.id.chip_books) {
-                loadFavoritesByType("book");
-            } else if (checkedId == R.id.chip_music) {
-                loadFavoritesByType("music");
-            } else if (checkedId == R.id.chip_movies) {
-                loadFavoritesByType("movie");
-            }
-        });
+        // Show loading state
+        showLoading(true);
 
-        // Load all favorites by default
-        loadAllFavorites();
+        // Load favorites
+        loadFavorites();
     }
 
-    /**
-     * Load all favorites from Firestore
-     */
-    private void loadAllFavorites() {
-        showLoading(true);
+    private void loadFavorites() {
+        Log.d(TAG, "Starting to load favorites");
 
         firestoreService.getFavorites(new FirestoreService.FirestoreCallback<List<Recommendation>>() {
             @Override
             public void onSuccess(List<Recommendation> result) {
-                showLoading(false);
-                favorites.clear();
-                favorites.addAll(result);
-                adapter.notifyDataSetChanged();
+                Log.d(TAG, "Favorites loaded successfully. Count: " + (result != null ? result.size() : 0));
 
-                if (favorites.isEmpty()) {
-                    showEmptyState(true);
-                } else {
+                showLoading(false);
+
+                if (result != null && !result.isEmpty()) {
+                    // Clear existing items and add new ones
+                    favorites.clear();
+                    favorites.addAll(result);
+
+                    // Debug: Print each favorite
+                    for (Recommendation rec : result) {
+                        Log.d(TAG, "Loaded favorite: " + rec.getTitle() + " (Type: " + rec.getType() + ")");
+                    }
+
+                    // Notify adapter of changes
+                    adapter.notifyDataSetChanged();
+
+                    // Hide empty state
                     showEmptyState(false);
+
+                    Log.d(TAG, "Updated adapter with " + favorites.size() + " favorites");
+                } else {
+                    // Show empty state if no favorites found
+                    showEmptyState(true);
+                    Log.d(TAG, "No favorites found, showing empty state");
                 }
             }
 
             @Override
             public void onError(Exception e) {
+                Log.e(TAG, "Error loading favorites: " + e.getMessage(), e);
+
                 showLoading(false);
                 showEmptyState(true);
+
+                // Show error message to user
                 Toast.makeText(FavoritesActivity.this,
                         "Error loading favorites: " + e.getMessage(),
                         Toast.LENGTH_SHORT).show();
@@ -107,65 +117,43 @@ public class FavoritesActivity extends AppCompatActivity implements FavoritesAda
         });
     }
 
-    /**
-     * Load favorites filtered by type
-     */
-    private void loadFavoritesByType(String type) {
-        showLoading(true);
-
-        firestoreService.getFavoritesByType(type, new FirestoreService.FirestoreCallback<List<Recommendation>>() {
-            @Override
-            public void onSuccess(List<Recommendation> result) {
-                showLoading(false);
-                favorites.clear();
-                favorites.addAll(result);
-                adapter.notifyDataSetChanged();
-
-                if (favorites.isEmpty()) {
-                    showEmptyState(true);
-                } else {
-                    showEmptyState(false);
-                }
-            }
-
-            @Override
-            public void onError(Exception e) {
-                showLoading(false);
-                showEmptyState(true);
-                Toast.makeText(FavoritesActivity.this,
-                        "Error loading favorites: " + e.getMessage(),
-                        Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    /**
-     * Show or hide loading indicator
-     */
     private void showLoading(boolean isLoading) {
-        loadingIndicator.setVisibility(isLoading ? View.VISIBLE : View.GONE);
-        recyclerFavorites.setVisibility(isLoading ? View.GONE : View.VISIBLE);
+        if (loadingIndicator != null) {
+            loadingIndicator.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+        }
+        if (recyclerFavorites != null) {
+            recyclerFavorites.setVisibility(isLoading ? View.GONE : View.VISIBLE);
+        }
+
+        Log.d(TAG, "Loading indicator " + (isLoading ? "shown" : "hidden"));
     }
 
-    /**
-     * Show or hide empty state
-     */
     private void showEmptyState(boolean isEmpty) {
-        emptyText.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
-        recyclerFavorites.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
+        if (emptyStateView != null) {
+            emptyStateView.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
+        }
+        if (recyclerFavorites != null) {
+            recyclerFavorites.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
+        }
+
+        Log.d(TAG, "Empty state " + (isEmpty ? "shown" : "hidden"));
     }
 
-    /**
-     * Handle unfavorite click from adapter
-     */
     @Override
     public void onFavoriteClick(Recommendation recommendation, int position) {
+        Log.d(TAG, "Favorite click at position " + position + ": " + recommendation.getTitle());
+
+        // Remove from favorites
         firestoreService.removeFavorite(recommendation.getId(), new FirestoreService.FirestoreCallback<Void>() {
             @Override
             public void onSuccess(Void result) {
+                Log.d(TAG, "Successfully removed from favorites: " + recommendation.getTitle());
+
+                // Remove from local list
                 favorites.remove(position);
                 adapter.notifyItemRemoved(position);
 
+                // Show empty state if no favorites left
                 if (favorites.isEmpty()) {
                     showEmptyState(true);
                 }
@@ -177,6 +165,8 @@ public class FavoritesActivity extends AppCompatActivity implements FavoritesAda
 
             @Override
             public void onError(Exception e) {
+                Log.e(TAG, "Error removing from favorites: " + e.getMessage(), e);
+
                 Toast.makeText(FavoritesActivity.this,
                         "Error removing from favorites: " + e.getMessage(),
                         Toast.LENGTH_SHORT).show();

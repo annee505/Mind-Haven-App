@@ -11,6 +11,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -20,9 +21,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-/**
- * Service to handle all Firestore operations related to recommendations
- */
 public class FirestoreService {
     private static final String TAG = "FirestoreService";
 
@@ -44,13 +42,26 @@ public class FirestoreService {
     public FirestoreService() {
         db = FirebaseFirestore.getInstance();
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
+
+        // Enable Firestore logging for debugging
+        FirebaseFirestore.setLoggingEnabled(true);
+
+        // Log authentication status
+        if (currentUser != null) {
+            Log.d(TAG, "User authenticated: " + currentUser.getUid());
+        } else {
+            Log.w(TAG, "No user authenticated. Favorites functionality will be disabled.");
+        }
     }
 
     /**
      * Save a recommendation as a favorite
      */
     public void saveFavorite(Recommendation recommendation, final FirestoreCallback<Void> callback) {
+        // Check if the user is logged in
         if (currentUser == null) {
+            Log.e(TAG, "Cannot save favorite: User not logged in");
+            // If not, return an error
             callback.onError(new Exception("User not logged in"));
             return;
         }
@@ -63,23 +74,32 @@ public class FirestoreService {
             recommendation.setDateAdded(new Date());
         }
 
+        // Ensure recommendation is marked as favorite
+        recommendation.setFavorite(true);
+
         // Generate document ID if not present
         if (recommendation.getId() == null || recommendation.getId().isEmpty()) {
             String docId = db.collection(FAVORITES_COLLECTION).document().getId();
             recommendation.setId(docId);
+            Log.d(TAG, "Generated new ID for favorite: " + docId);
         }
 
+        Log.d(TAG, "Saving favorite: " + recommendation.getTitle() + " (ID: " + recommendation.getId() + ")");
+
+        // Save the recommendation to Firestore
         db.collection(FAVORITES_COLLECTION)
                 .document(recommendation.getId())
                 .set(recommendation.toMap())
                 .addOnSuccessListener(aVoid -> {
-                    Log.d(TAG, "Recommendation saved to Firestore");
+                    Log.d(TAG, "Successfully saved recommendation to Firestore: " + recommendation.getTitle());
+                    // If the callback is not null, return success
                     if (callback != null) {
                         callback.onSuccess(null);
                     }
                 })
                 .addOnFailureListener(e -> {
-                    Log.e(TAG, "Error saving recommendation", e);
+                    Log.e(TAG, "Error saving recommendation: " + e.getMessage(), e);
+                    // If the callback is not null, return error
                     if (callback != null) {
                         callback.onError(e);
                     }
@@ -91,21 +111,30 @@ public class FirestoreService {
      */
     public void removeFavorite(String recommendationId, final FirestoreCallback<Void> callback) {
         if (currentUser == null) {
+            Log.e(TAG, "Cannot remove favorite: User not logged in");
             callback.onError(new Exception("User not logged in"));
             return;
         }
+
+        if (recommendationId == null || recommendationId.isEmpty()) {
+            Log.e(TAG, "Cannot remove favorite: Invalid recommendation ID");
+            callback.onError(new Exception("Invalid recommendation ID"));
+            return;
+        }
+
+        Log.d(TAG, "Removing favorite with ID: " + recommendationId);
 
         db.collection(FAVORITES_COLLECTION)
                 .document(recommendationId)
                 .delete()
                 .addOnSuccessListener(aVoid -> {
-                    Log.d(TAG, "Recommendation removed from Firestore");
+                    Log.d(TAG, "Successfully removed recommendation from Firestore: " + recommendationId);
                     if (callback != null) {
                         callback.onSuccess(null);
                     }
                 })
                 .addOnFailureListener(e -> {
-                    Log.e(TAG, "Error removing recommendation", e);
+                    Log.e(TAG, "Error removing recommendation: " + e.getMessage(), e);
                     if (callback != null) {
                         callback.onError(e);
                     }
@@ -117,18 +146,23 @@ public class FirestoreService {
      */
     public void getFavorites(final FirestoreCallback<List<Recommendation>> callback) {
         if (currentUser == null) {
+            Log.e(TAG, "Cannot get favorites: User not logged in");
             callback.onError(new Exception("User not logged in"));
             return;
         }
+
+        Log.d(TAG, "Getting favorites for user: " + currentUser.getUid());
 
         db.collection(FAVORITES_COLLECTION)
                 .whereEqualTo("userId", currentUser.getUid())
                 .orderBy("dateAdded", Query.Direction.DESCENDING)
                 .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        List<Recommendation> favorites = new ArrayList<>();
-                        for (QueryDocumentSnapshot document : task.getResult()) {
+                .addOnSuccessListener(querySnapshot -> {
+                    List<Recommendation> favorites = new ArrayList<>();
+                    Log.d(TAG, "Retrieved " + querySnapshot.size() + " favorite documents from Firestore");
+
+                    for (DocumentSnapshot document : querySnapshot.getDocuments()) {
+                        try {
                             String id = document.getId();
                             String title = document.getString("title");
                             String description = document.getString("description");
@@ -138,6 +172,16 @@ public class FirestoreService {
                             Date dateAdded = document.getDate("dateAdded");
                             String userId = document.getString("userId");
 
+                            // Log each document's key fields for debugging
+                            Log.d(TAG, "Processing favorite - ID: " + id + ", Title: " + title +
+                                    ", Type: " + type + ", Favorite: " + isFavorite);
+
+                            // Verify required fields exist
+                            if (title == null || type == null) {
+                                Log.w(TAG, "Skipping favorite with missing required fields. ID: " + id);
+                                continue;
+                            }
+
                             Recommendation recommendation = new Recommendation(
                                     id, title, description, mood, type,
                                     isFavorite != null ? isFavorite : true,
@@ -145,12 +189,18 @@ public class FirestoreService {
                             );
 
                             favorites.add(recommendation);
+                            Log.d(TAG, "Added recommendation to favorites list: " + title);
+                        } catch (Exception e) {
+                            Log.e(TAG, "Error parsing favorite document: " + e.getMessage(), e);
                         }
-                        callback.onSuccess(favorites);
-                    } else {
-                        Log.e(TAG, "Error getting favorites", task.getException());
-                        callback.onError(task.getException());
                     }
+
+                    Log.d(TAG, "Returning " + favorites.size() + " favorites to caller");
+                    callback.onSuccess(favorites);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error getting favorites: " + e.getMessage(), e);
+                    callback.onError(e);
                 });
     }
 
@@ -159,19 +209,30 @@ public class FirestoreService {
      */
     public void getFavoritesByType(String type, final FirestoreCallback<List<Recommendation>> callback) {
         if (currentUser == null) {
+            Log.e(TAG, "Cannot get favorites by type: User not logged in");
             callback.onError(new Exception("User not logged in"));
             return;
         }
+
+        if (type == null || type.isEmpty()) {
+            Log.e(TAG, "Cannot get favorites by type: Invalid type");
+            callback.onError(new Exception("Invalid content type"));
+            return;
+        }
+
+        Log.d(TAG, "Getting favorites of type '" + type + "' for user: " + currentUser.getUid());
 
         db.collection(FAVORITES_COLLECTION)
                 .whereEqualTo("userId", currentUser.getUid())
                 .whereEqualTo("type", type)
                 .orderBy("dateAdded", Query.Direction.DESCENDING)
                 .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        List<Recommendation> favorites = new ArrayList<>();
-                        for (QueryDocumentSnapshot document : task.getResult()) {
+                .addOnSuccessListener(querySnapshot -> {
+                    List<Recommendation> favorites = new ArrayList<>();
+                    Log.d(TAG, "Retrieved " + querySnapshot.size() + " favorites of type '" + type + "'");
+
+                    for (DocumentSnapshot document : querySnapshot.getDocuments()) {
+                        try {
                             String id = document.getId();
                             String title = document.getString("title");
                             String description = document.getString("description");
@@ -180,6 +241,12 @@ public class FirestoreService {
                             Date dateAdded = document.getDate("dateAdded");
                             String userId = document.getString("userId");
 
+                            // Verify title exists
+                            if (title == null) {
+                                Log.w(TAG, "Skipping favorite with missing title. ID: " + id);
+                                continue;
+                            }
+
                             Recommendation recommendation = new Recommendation(
                                     id, title, description, mood, type,
                                     isFavorite != null ? isFavorite : true,
@@ -187,12 +254,18 @@ public class FirestoreService {
                             );
 
                             favorites.add(recommendation);
+                            Log.d(TAG, "Added typed recommendation to favorites list: " + title);
+                        } catch (Exception e) {
+                            Log.e(TAG, "Error parsing favorite by type: " + e.getMessage(), e);
                         }
-                        callback.onSuccess(favorites);
-                    } else {
-                        Log.e(TAG, "Error getting favorites by type", task.getException());
-                        callback.onError(task.getException());
                     }
+
+                    Log.d(TAG, "Returning " + favorites.size() + " favorites of type '" + type + "' to caller");
+                    callback.onSuccess(favorites);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error getting favorites by type: " + e.getMessage(), e);
+                    callback.onError(e);
                 });
     }
 
@@ -201,6 +274,12 @@ public class FirestoreService {
      */
     public void saveToHistory(Recommendation recommendation) {
         if (currentUser == null) {
+            Log.w(TAG, "Cannot save to history: User not logged in");
+            return;
+        }
+
+        if (recommendation == null) {
+            Log.w(TAG, "Cannot save to history: Recommendation is null");
             return;
         }
 
@@ -210,12 +289,17 @@ public class FirestoreService {
         // Set the current date
         recommendation.setDateAdded(new Date());
 
+        Log.d(TAG, "Saving to history: " + recommendation.getTitle());
+
         db.collection(HISTORY_COLLECTION)
                 .add(recommendation.toMap())
-                .addOnSuccessListener(documentReference ->
-                        Log.d(TAG, "Recommendation added to history"))
-                .addOnFailureListener(e ->
-                        Log.e(TAG, "Error adding recommendation to history", e));
+                .addOnSuccessListener(documentReference -> {
+                    String newId = documentReference.getId();
+                    Log.d(TAG, "Successfully added recommendation to history with ID: " + newId);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error adding recommendation to history: " + e.getMessage(), e);
+                });
     }
 
     /**
@@ -223,28 +307,39 @@ public class FirestoreService {
      */
     public void checkIfFavorite(Recommendation recommendation, final FirestoreCallback<Boolean> callback) {
         if (currentUser == null) {
+            Log.d(TAG, "Cannot check if favorite: User not logged in");
             callback.onSuccess(false);
             return;
         }
+
+        if (recommendation == null) {
+            Log.w(TAG, "Cannot check if favorite: Recommendation is null");
+            callback.onSuccess(false);
+            return;
+        }
+
+        Log.d(TAG, "Checking if favorite: " + recommendation.getTitle() + " (" + recommendation.getType() + ")");
 
         db.collection(FAVORITES_COLLECTION)
                 .whereEqualTo("userId", currentUser.getUid())
                 .whereEqualTo("title", recommendation.getTitle())
                 .whereEqualTo("type", recommendation.getType())
                 .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        boolean isFavorite = !task.getResult().isEmpty();
-                        if (isFavorite && !task.getResult().isEmpty()) {
-                            // Set the ID from Firestore to our recommendation
-                            String docId = task.getResult().getDocuments().get(0).getId();
-                            recommendation.setId(docId);
-                        }
-                        callback.onSuccess(isFavorite);
-                    } else {
-                        Log.e(TAG, "Error checking if favorite", task.getException());
-                        callback.onSuccess(false);
+                .addOnSuccessListener(querySnapshot -> {
+                    boolean isFavorite = !querySnapshot.isEmpty();
+                    Log.d(TAG, recommendation.getTitle() + " is " + (isFavorite ? "a favorite" : "not a favorite"));
+
+                    if (isFavorite && !querySnapshot.isEmpty()) {
+                        // Set the ID from Firestore to our recommendation
+                        String docId = querySnapshot.getDocuments().get(0).getId();
+                        recommendation.setId(docId);
+                        Log.d(TAG, "Found favorite document ID: " + docId);
                     }
+                    callback.onSuccess(isFavorite);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error checking if favorite: " + e.getMessage(), e);
+                    callback.onSuccess(false);
                 });
     }
 }
