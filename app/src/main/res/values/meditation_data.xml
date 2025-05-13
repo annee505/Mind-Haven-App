@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="meditation_titles">
+        <item>Deep Breathing Exercise</item>
+        <item>Body Scan Meditation</item>
+        <item>Mindful Awareness</item>
+        <item>Stress Relief</item>
+        <item>Sleep Well</item>
+    </string-array>
+
+    <string-array name="meditation_descriptions">
+        <item>A guided breathing exercise to help you relax and reduce stress</item>
+        <item>Progressive relaxation meditation for body awareness</item>
+        <item>Practice being present in the moment</item>
+        <item>Calming meditation to relieve stress and anxiety</item>
+        <item>Gentle meditation to help you fall asleep</item>
+    </string-array>
+
+    <string-array name="meditation_durations">
+        <item>10:00</item>
+        <item>15:00</item>
+        <item>12:00</item>
+        <item>20:00</item>
+        <item>25:00</item>
+    </string-array>
+
+    <string-array name="meditation_categories">
+        <item>Breathing</item>
+        <item>Relaxation</item>
+        <item>Mindfulness</item>
+        <item>Stress</item>
+        <item>Sleep</item>
+    </string-array>
+</resources>

@@ -1,130 +1,83 @@
 package com.example.mindhaven;
 
 import android.os.Bundle;
-import android.view.View;
-import android.widget.Button;
-import android.widget.ProgressBar;
+import android.util.Log;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
-import com.google.android.material.chip.Chip;
-import com.google.android.material.chip.ChipGroup;
-
-import java.util.ArrayList;
 import java.util.List;
 
-public class BooksActivity extends AppCompatActivity implements RecommendationAdapter.OnFavoriteClickListener {
+/**
+ * Activity for book recommendations
+ */
+public class BooksActivity extends BaseRecommendationActivity {
 
-    private ChipGroup moodGroup;
-    private ChipGroup moodGroupMore;
-    private Button getRecommendationsButton;
-    private RecyclerView recyclerView;
-    private ProgressBar loadingIndicator;
-    private RecommendationAdapter adapter;
-    private RecommendationService recommendationService;
+    private static final String TAG = "BooksActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_books);
 
-        // Initialize UI components
-        moodGroup = findViewById(R.id.mood_group);
-        moodGroupMore = findViewById(R.id.mood_group_more);
-        getRecommendationsButton = findViewById(R.id.button_get_recommendations);
-        recyclerView = findViewById(R.id.recycler_recommendations);
-        loadingIndicator = findViewById(R.id.loading_indicator);
+        // Set activity title
+        setTitle("Book Recommendations");
 
-        // Set up RecyclerView
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new RecommendationAdapter(this, new ArrayList<>(), this);
-        recyclerView.setAdapter(adapter);
-
-        // Initialize recommendation service
-        recommendationService = new RecommendationService(this);
-
-        // Set up click listener for the button
-        getRecommendationsButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                getBookRecommendations();
-            }
-        });
-
-        // Add shuffle button
-        Button shuffleButton = findViewById(R.id.button_shuffle);
-        shuffleButton.setOnClickListener(v -> adapter.shuffleRecommendations());
+        // Select a default mood to show initial recommendations
+        if (selectedMoods.isEmpty()) {
+            selectedMoods.add("happy"); // Default mood
+            Log.d(TAG, "Setting default mood: happy");
+            loadRecommendationsForMoods(selectedMoods);
+        }
     }
 
-    /**
-     * Get book recommendations based on selected moods
-     */
-    private void getBookRecommendations() {
-        // Get all selected moods from both chip groups
-        List<String> selectedMoods = new ArrayList<>();
+    @Override
+    protected int getLayoutResourceId() {
+        return R.layout.activity_books;
+    }
 
-        // Check chips in the first group
-        for (int i = 0; i < moodGroup.getChildCount(); i++) {
-            Chip chip = (Chip) moodGroup.getChildAt(i);
-            if (chip.isChecked()) {
-                selectedMoods.add(chip.getText().toString());
-            }
-        }
+    @Override
+    protected String getRecommendationType() {
+        return "book";
+    }
 
-        // Check chips in the second group
-        for (int i = 0; i < moodGroupMore.getChildCount(); i++) {
-            Chip chip = (Chip) moodGroupMore.getChildAt(i);
-            if (chip.isChecked()) {
-                selectedMoods.add(chip.getText().toString());
-            }
-        }
+    @Override
+    protected void loadRecommendationsForMoods(List<String> moods) {
+        showLoading(true);
 
-        // Validate selection
-        if (selectedMoods.isEmpty()) {
-            Toast.makeText(this, "Please select at least one mood", Toast.LENGTH_SHORT).show();
-            return;
-        }
+        // Add debug logs
+        Log.d(TAG, "Loading book recommendations for moods: " + moods);
 
-        // Show loading indicator
-        loadingIndicator.setVisibility(View.VISIBLE);
-
-        // Get recommendations based on multiple moods
-        recommendationService.getBookRecommendations(selectedMoods, new RecommendationService.RecommendationCallback() {
+        recommendationService.getBookRecommendations(moods, new RecommendationService.RecommendationCallback() {
             @Override
-            public void onSuccess(List<Recommendation> recommendations) {
-                // Hide loading indicator
-                loadingIndicator.setVisibility(View.GONE);
+            public void onSuccess(List<Recommendation> result) {
+                Log.d(TAG, "Received " + result.size() + " book recommendations");
 
-                // Update RecyclerView with recommendations
-                adapter.updateRecommendations(recommendations);
+                recommendations.clear();
+                recommendations.addAll(result);
 
-                // Scroll to the top of the recommendations
-                recyclerView.smoothScrollToPosition(0);
+                // Make sure adapter is not null
+                if (adapter != null) {
+                    adapter.notifyDataSetChanged();
+                    Log.d(TAG, "Adapter notified of data change");
+                } else {
+                    Log.e(TAG, "Adapter is null!");
+                }
+
+                showLoading(false);
+
+                // Track user selections in Firestore for improved recommendations in the future
+                if (currentUser != null && !result.isEmpty()) {
+                    firestoreService.saveToHistory(result.get(0));
+                    Log.d(TAG, "First recommendation saved to history");
+                }
             }
 
             @Override
             public void onError(String errorMessage) {
-                // Hide loading indicator
-                loadingIndicator.setVisibility(View.GONE);
-
-                // Show error message
-                Toast.makeText(BooksActivity.this, errorMessage, Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "Error loading book recommendations: " + errorMessage);
+                Toast.makeText(BooksActivity.this,
+                        "Error: " + errorMessage,
+                        Toast.LENGTH_SHORT).show();
+                showLoading(false);
             }
         });
-    }
-
-    @Override
-    public void onFavoriteClick(Recommendation recommendation, boolean isFavorite) {
-        // Handle favorite toggle
-        if (isFavorite) {
-            // Add to favorites (you'll need to implement this storage)
-            Toast.makeText(this, "Added to favorites", Toast.LENGTH_SHORT).show();
-        } else {
-            // Remove from favorites
-            Toast.makeText(this, "Removed from favorites", Toast.LENGTH_SHORT).show();
-        }
     }
 }

@@ -36,9 +36,8 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_margin="8dp"
-                android:text="@string/shuffle_button"
-                android:drawableLeft="@drawable/ic_shuffle"
-                style="@style/Widget.AppCompat.Button.Borderless" />
+                android:text="Shuffle Recommendations"
+                android:drawableLeft="@drawable/ic_shuffle" />
 
             <!-- Progress indicator -->
             <ProgressBar
@@ -47,7 +46,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_margin="16dp"
-                android:visibility="gone" />
+                android:visibility="visible" />
 
             <!-- Recommendations RecyclerView -->
             <androidx.recyclerview.widget.RecyclerView
@@ -55,7 +54,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:padding="8dp" />
+                android:minHeight="200dp"
+                android:padding="8dp"
+                android:visibility="gone" />
 
         </LinearLayout>
     </ScrollView>
