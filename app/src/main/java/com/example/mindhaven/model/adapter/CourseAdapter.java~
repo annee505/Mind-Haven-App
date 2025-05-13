@@ -21,6 +21,7 @@ public class CourseAdapter extends RecyclerView.Adapter<CourseAdapter.ViewHolder
     public CourseAdapter(List<PracticalCourse> courses) {
         this.courses = courses;
     }
+
     public void setEmptyView(View emptyView) {
         this.emptyView = emptyView;
         checkIfEmpty();
@@ -60,12 +61,6 @@ public class CourseAdapter extends RecyclerView.Adapter<CourseAdapter.ViewHolder
         this.courses = courses;
         notifyDataSetChanged();
         checkIfEmpty();
-    }
-
-    public void updateCourses(List<PracticalCourse> newCourses) {
-        this.courses.clear();
-        this.courses.addAll(newCourses);
-        notifyDataSetChanged();
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {

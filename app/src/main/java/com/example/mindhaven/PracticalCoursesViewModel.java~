@@ -1,0 +1,57 @@
+
+package com.example.mindhaven;
+
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.ViewModel;
+
+import com.example.mindhaven.data.CourseDataProvider;
+import com.example.mindhaven.model.Course;
+import com.example.mindhaven.model.PracticalCourse;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.stream.Collectors;
+
+public class PracticalCoursesViewModel extends ViewModel {
+    private final MutableLiveData<List<Course>> courses = new MutableLiveData<>();
+    private List<PracticalCourse> allCourses = new ArrayList<>();
+    private String currentFilter = null;
+
+    public LiveData<List<Course>> getCourses() {
+        return courses;
+    }
+
+    public void clearFilters() {
+        currentFilter = null;
+        loadCourses();
+    }
+
+    public void filterByType(String type) {
+        currentFilter = type;
+        if (allCourses != null && !allCourses.isEmpty()) {
+            List<Course> filtered = allCourses.stream()
+                    .filter(course -> type.equalsIgnoreCase(course.getCategory()))
+                    .collect(Collectors.toList());
+            courses.postValue(filtered);
+        }
+    }
+
+    public void loadCourses() {
+        allCourses = CourseDataProvider.getMentalHealthCourses();
+
+        if (currentFilter != null) {
+            filterByType(currentFilter);
+        } else {
+            courses.postValue(new ArrayList<>(allCourses));
+        }
+
+        // Store courses in Firebase for persistence
+        FirebaseHelper.getInstance().storeCourses(allCourses, courseList -> {
+            if (currentFilter != null) {
+                filterByType(currentFilter);
+            } else {
+                courses.postValue(courseList);
+            }
+        });
+    }
+}

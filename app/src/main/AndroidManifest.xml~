@@ -94,7 +94,6 @@
         <activity
             android:name=".MusicActivity"
             android:exported="false" />
-        <activity android:name=".CourseDetailActivity"></activity>
 
         <activity
             android:name=".BreathingExerciseActivity"

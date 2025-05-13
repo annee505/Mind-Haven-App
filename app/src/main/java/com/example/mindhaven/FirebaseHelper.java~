@@ -4,10 +4,9 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import com.example.mindhaven.model.PracticalCourse;
 import com.example.mindhaven.model.User;
-import com.example.mindhaven.model.Course;
 import com.example.mindhaven.model.MeditationSession;
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.database.DatabaseError;
@@ -42,7 +41,7 @@ public class FirebaseHelper {
     }
 
     public interface CourseCallback {
-        void onCallback(List<Course> courses);
+        void onCallback(List<PracticalCourse> courses);
     }
 
     public interface MeditationCallback {
@@ -77,22 +76,30 @@ public class FirebaseHelper {
 
     public void fetchCourses(CourseCallback callback) {
         database.child("courses")
-            .addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    List<Course> courses = new ArrayList<>();
-                    for (DataSnapshot courseSnapshot : snapshot.getChildren()) {
-                        Course course = courseSnapshot.getValue(Course.class);
-                        courses.add(course);
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        List<PracticalCourse> practicalCourses = new ArrayList<>();
+                        for (DataSnapshot courseSnapshot : snapshot.getChildren()) {
+                            PracticalCourse course = courseSnapshot.getValue(PracticalCourse.class);
+                            // Convert Course to PracticalCourse
+                            PracticalCourse practicalCourse = new PracticalCourse();
+                            practicalCourse.setId(course.getId());
+                            practicalCourse.setTitle(course.getTitle());
+                            practicalCourse.setDescription(course.getDescription());
+                            //practicalCourse.setDuration(course.getDuration());
+                            practicalCourse.setDifficulty(course.getDifficulty());
+                            practicalCourse.setCompletionRate(course.getProgress()); // Assuming this is how you want to set it
+                            practicalCourses.add(practicalCourse);
+                        }
+                        callback.onCallback(practicalCourses); // Return the list of PracticalCourse
                     }
-                    callback.onCallback(courses);
-                }
-                
-                @Override
-                public void onCancelled(@NonNull DatabaseError error) {
-                     Log.e("Firebase", "Error fetching courses", error.toException());
-                }
-            });
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Log.e("Firebase", "Error fetching courses", error.toException());
+                    }
+                });
     }
 
     public void saveMeditationSession(String userId, MeditationSession session) {
@@ -101,20 +108,20 @@ public class FirebaseHelper {
 
     public void getMeditationHistory(String userId, MeditationCallback callback) {
         database.child("meditation").child(userId)
-            .addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    List<MeditationSession> sessions = new ArrayList<>();
-                    for (DataSnapshot sessionSnapshot : snapshot.getChildren()) {
-                        MeditationSession session = sessionSnapshot.getValue(MeditationSession.class);
-                        sessions.add(session);
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        List<MeditationSession> sessions = new ArrayList<>();
+                        for (DataSnapshot sessionSnapshot : snapshot.getChildren()) {
+                            MeditationSession session = sessionSnapshot.getValue(MeditationSession.class);
+                            sessions.add(session);
+                        }
+                        callback.onCallback(sessions);
                     }
-                    callback.onCallback(sessions);
-                }
-                @Override
-                public void onCancelled(@NonNull DatabaseError error) {
-                    Log.e("Firebase", "Error fetching meditation history", error.toException());
-                }
-            });
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Log.e("Firebase", "Error fetching meditation history", error.toException());
+                    }
+                });
     }
 }

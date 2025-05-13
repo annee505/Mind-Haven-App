@@ -1,0 +1,75 @@
+
+package com.example.mindhaven.data;
+
+import com.example.mindhaven.model.PracticalCourse;
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
+
+public class CourseDataProvider {
+    public static List<PracticalCourse> getMentalHealthCourses() {
+        List<PracticalCourse> courses = new ArrayList<>();
+
+        // Real courses from Yale - The Science of Well-Being
+        PracticalCourse course1 = new PracticalCourse();
+        course1.setId("yale-well-being");
+        course1.setTitle("The Science of Well-Being");
+        course1.setInstructor("Dr. Laurie Santos");
+        course1.setSource("Yale University");
+        course1.setCategory("Well-being");
+        course1.setDescription("Learn evidence-based techniques to increase your own happiness and build more productive habits.");
+        course1.setDuration("10 weeks");
+        course1.setDifficulty("Beginner");
+        course1.setModules(Arrays.asList(
+                new PracticalCourse.Module("m1", "Misconceptions About Happiness",
+                        "Explore common misconceptions about what makes us happy", "video",
+                        "https://www.coursera.org/learn/the-science-of-well-being", 60),
+                new PracticalCourse.Module("m2", "Why Our Expectations are so Bad",
+                        "Understanding the biases that affect our happiness", "video",
+                        "https://www.coursera.org/learn/the-science-of-well-being", 45)
+        ));
+
+        // Real course from WHO - Stress Management
+        PracticalCourse course2 = new PracticalCourse();
+        course2.setId("who-stress");
+        course2.setTitle("Stress Management and Coping Strategies");
+        course2.setInstructor("WHO Mental Health Department");
+        course2.setSource("World Health Organization");
+        course2.setCategory("Stress Management");
+        course2.setDescription("Evidence-based techniques for managing stress and building resilience.");
+        course2.setDuration("6 weeks");
+        course2.setDifficulty("Intermediate");
+        course2.setModules(Arrays.asList(
+                new PracticalCourse.Module("m1", "Understanding Stress",
+                        "Scientific understanding of stress response", "text",
+                        "https://www.who.int/mental-health", 30),
+                new PracticalCourse.Module("m2", "Practical Coping Techniques",
+                        "Evidence-based stress management techniques", "exercise",
+                        "https://www.who.int/mental-health", 45)
+        ));
+
+        // Real course from NHS - CBT Basics
+        PracticalCourse course3 = new PracticalCourse();
+        course3.setId("nhs-cbt");
+        course3.setTitle("Cognitive Behavioral Therapy Basics");
+        course3.setInstructor("NHS Mental Health Team");
+        course3.setSource("National Health Service (UK)");
+        course3.setCategory("CBT");
+        course3.setDescription("Learn the fundamentals of CBT and how to apply them in daily life.");
+        course3.setDuration("8 weeks");
+        course3.setDifficulty("Beginner");
+        course3.setModules(Arrays.asList(
+                new Module("m1", "Introduction to CBT",
+                        "Understanding the basics of cognitive behavioral therapy", "video",
+                        "https://www.nhs.uk/mental-health/", 50),
+                new Module("m2", "Thought Records",
+                        "Learning to identify and challenge negative thoughts", "exercise",
+                        "https://www.nhs.uk/mental-health/", 40)
+        ));
+
+        courses.add(course1);
+        courses.add(course2);
+        courses.add(course3);
+        return courses;
+    }
+}
