@@ -16,23 +16,17 @@ public class MeditationViewModel extends AndroidViewModel {
     private LiveData<List<MeditationAudio>> allAudios;
     private LiveData<Boolean> isLoading;
     private LiveData<String> errorMessage;
-
-    // MutableLiveData to track the current category
     private final MutableLiveData<String> currentCategory = new MutableLiveData<>("All");
-
-    // Filtered meditations based on current category
     private final LiveData<List<MeditationAudio>> filteredAudios;
 
     public MeditationViewModel(Application application) {
         super(application);
         repository = new MeditationRepository(application);
 
-        // Initialize LiveData from repository
         allAudios = repository.getAllAudios();
         isLoading = repository.getIsLoading();
         errorMessage = repository.getErrorMessage();
 
-        // Create a transformation to get meditations by selected category
         filteredAudios = Transformations.switchMap(currentCategory, category -> {
             if ("All".equals(category)) {
                 return repository.getAllAudios();
@@ -44,76 +38,50 @@ public class MeditationViewModel extends AndroidViewModel {
         });
     }
 
-    // Get all meditations
     public LiveData<List<MeditationAudio>> getAllAudios() {
         return allAudios;
     }
 
-    // Get meditations filtered by the current category
     public LiveData<List<MeditationAudio>> getFilteredAudios() {
         return filteredAudios;
     }
 
-    // Set the current category and trigger loading from API
     public void setCategory(String category) {
         if (!category.equals(currentCategory.getValue())) {
             currentCategory.setValue(category);
-
-            // Load data from API for the selected category (unless it's "All" or "Favorites")
-            if (!"All".equals(category) && !"Favorites".equals(category)) {
-                repository.fetchMeditationsByCategoryFromApi(category);
-            }
         }
     }
 
-    // Get the current category
-    public LiveData<String> getCurrentCategory() {
-        return currentCategory;
-    }
-
-    // Get meditations by category
-    public LiveData<List<MeditationAudio>> getAudiosByCategory(String category) {
-        return repository.getAudiosByCategory(category);
-    }
-
-    // Insert new meditation
-    public void insert(MeditationAudio audio) {
-        repository.insert(audio);
-    }
-
-    // Get favorite meditations
-    public LiveData<List<MeditationAudio>> getFavoriteAudios() {
-        return repository.getFavoriteAudios();
-    }
-
-    // Update favorite status
-    public void updateFavoriteStatus(MeditationAudio audio) {
-        repository.updateFavoriteStatus(audio);
-    }
-
-    // Get loading state
-    public LiveData<Boolean> getIsLoading() {
-        return isLoading;
-    }
-
-    // Get error messages
     public LiveData<String> getErrorMessage() {
         return errorMessage;
     }
 
-    // Refresh data from API
     public void refreshData() {
-        repository.refreshMeditationsFromApi();
-    }
-
-    // Load featured meditations
-    public void loadFeaturedMeditations() {
         repository.fetchFeaturedMeditations();
     }
 
-    // Search meditations (this would typically be handled by the database)
+    public void loadFeaturedMeditations() {
+        repository.fetchFeaturedMeditations(); // Load featured contents
+    }
+
+    public LiveData<Boolean> getIsLoading() {
+        return isLoading;
+    }
+
+    public LiveData<List<MeditationAudio>> getFavoriteAudios() {
+        return repository.getFavoriteAudios();
+    }
+
+    public LiveData<List<MeditationAudio>> getAudiosByCategory(String category) {
+        return repository.getAudiosByCategory(category);
+    }
+
+    public void updateFavoriteStatus(MeditationAudio audio) {
+        repository.updateFavoriteStatus(audio);
+    }
+
     public void searchMeditations(String query) {
         // This would typically be implemented with a Room query with LIKE
-        // For now, we'll rely on the UI to filter the results from filteredAudios
+        // For now, reliance on UI filtering is needed
     }
 }

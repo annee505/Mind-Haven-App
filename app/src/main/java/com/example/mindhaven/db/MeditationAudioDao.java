@@ -1,3 +1,4 @@
+
 package com.example.mindhaven.db;
 
 import androidx.lifecycle.LiveData;
@@ -19,23 +20,22 @@ public interface MeditationAudioDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(List<MeditationAudio> meditationAudios);
 
-    @Query("SELECT * FROM meditation_audio ORDER BY title ASC")
+    @Query("SELECT * FROM meditation_audios ORDER BY title ASC")
     LiveData<List<MeditationAudio>> getAllAudios();
 
-    @Query("SELECT * FROM meditation_audio WHERE category = :category ORDER BY title ASC")
+    @Query("SELECT * FROM meditation_audios WHERE category = :category ORDER BY title ASC")
     LiveData<List<MeditationAudio>> getAudiosByCategory(String category);
 
-    @Query("SELECT * FROM meditation_audio WHERE isFavorite = 1 ORDER BY title ASC")
+    @Query("SELECT * FROM meditation_audios WHERE isFavorite = 1 ORDER BY title ASC")
     LiveData<List<MeditationAudio>> getFavoriteAudios();
 
-    @Query("UPDATE meditation_audio SET isFavorite = :isFavorite WHERE id = :id")
+    @Query("UPDATE meditation_audios SET isFavorite = :isFavorite WHERE id = :id")
     void updateFavoriteStatus(int id, boolean isFavorite);
 
-    @Query("DELETE FROM meditation_audio")
+    @Query("DELETE FROM meditation_audios")
     void deleteAll();
 
-    // Added this method to fix the 'Cannot resolve method getCount()' issue
-    @Query("SELECT COUNT(*) FROM meditation_audio")
+    @Query("SELECT COUNT(*) FROM meditation_audios")
     int getCount();
 
     @Update

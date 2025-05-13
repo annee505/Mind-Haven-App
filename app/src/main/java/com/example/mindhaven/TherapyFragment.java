@@ -63,12 +63,12 @@ public class TherapyFragment extends Fragment implements MeditationAdapter.OnMed
 
         observeViewModel();
         setupButtonListeners(view);
-        setupCBTResources(view);
+        //setupCBTResources(view);
 
         return view;
     }
 
-    private void setupCBTResources(View view) {
+    /*private void setupCBTResources(View view) {
         resourcesRecyclerView = view.findViewById(R.id.resourcesRecyclerView);
         worksheetsRecyclerView = view.findViewById(R.id.worksheetsRecyclerView);
 
@@ -94,7 +94,7 @@ public class TherapyFragment extends Fragment implements MeditationAdapter.OnMed
 
         resourcesRecyclerView.setAdapter(resourceAdapter);
         worksheetsRecyclerView.setAdapter(worksheetAdapter);
-    }
+    }*/
 
     private void observeViewModel() {
         meditationViewModel.getAllAudios().observe(getViewLifecycleOwner(), audios -> {
@@ -127,18 +127,9 @@ public class TherapyFragment extends Fragment implements MeditationAdapter.OnMed
         Button btnMoodCheckin = view.findViewById(R.id.btnMoodCheckin);
         btnMoodCheckin.setOnClickListener(v -> openMoodTracker());
 
-        Button btnSleepTracker = view.findViewById(R.id.btnSleepTracker);
-        btnSleepTracker.setOnClickListener(v -> openSleepTracker());
+
     }
 
-    private void openSleepTracker() {
-        Fragment sleepTrackerFragment = new SleepTrackerFragment();
-        requireActivity().getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragmentContainer, sleepTrackerFragment)
-                .addToBackStack(null)
-                .commit();
-    }
 
     private void openMeditationLibrary() {
         Intent intent = new Intent(getActivity(), MeditationLibraryActivity.class);

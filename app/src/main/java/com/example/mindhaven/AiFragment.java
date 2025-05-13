@@ -38,7 +38,7 @@ public class AiFragment extends Fragment {
     private EditText editText;
     private Button sendButton;
     private ProgressBar progressBar;
-    
+
     private FirebaseFirestore db;
     private RequestQueue requestQueue;
 
@@ -77,7 +77,6 @@ public class AiFragment extends Fragment {
             String userMessage = editText.getText().toString().trim();
             if (!userMessage.isEmpty()) {
                 editText.setText("");
-                getAiResponse(userMessage);
                 sendMessage(userMessage);
             }
         });
@@ -105,46 +104,104 @@ public class AiFragment extends Fragment {
                         return;
                     }
                     if (snapshots == null) {
-                         Log.w("AiFragment", "Snapshot listener returned null snapshots.");
-                         return;
-                     }
+                        Log.w("AiFragment", "Snapshot listener returned null snapshots.");
+                        return;
+                    }
 
-                    chatMessages.clear();
+                    // Log snapshot content
+                    Log.d("AiFragment", "Received " + snapshots.size() + " messages from Firestore");
+
+                    // Create a temporary list to hold the messages
+                    List<ChatMessage> updatedMessages = new ArrayList<>();
 
                     for (var document : snapshots) {
                         try {
+                            Log.d("AiFragment", "Processing message: " + document.getId());
                             ChatMessage chatMessage = document.toObject(ChatMessage.class);
                             if (chatMessage != null) {
                                 chatMessage.setMessageId(document.getId());
-                                chatMessage.setUsername(chatMessage.isCurrentUser() ? "You" : "AI Assistant");
-                                chatMessages.add(chatMessage);
+
+                                // Preserve the existing isCurrentUser value from Firestore
+                                boolean originalIsCurrentUser = chatMessage.isCurrentUser();
+
+                                // Check userId to determine sender type
+                                String userId = chatMessage.getUserId();
+                                if (userId != null) {
+                                    if (userId.equals("ai_system") || userId.equals("ai_system_error")) {
+                                        // This is an AI message
+                                        chatMessage.setUsername("AI Assistant");
+                                        chatMessage.setSenderType("AI");
+                                        if (originalIsCurrentUser) {
+                                            // This is wrong - AI messages should never be from current user
+                                            Log.e("AiFragment", "AI message incorrectly marked as current user: " + chatMessage.getMessageId());
+                                            chatMessage.isCurrentUser = false;
+                                        }
+                                    } else if (userId.equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
+                                        // This is a user message
+                                        chatMessage.setUsername("You");
+                                        chatMessage.setSenderType("user");
+                                        if (!originalIsCurrentUser) {
+                                            // This is wrong - user messages should be from current user
+                                            Log.e("AiFragment", "User message incorrectly marked as not current user: " + chatMessage.getMessageId());
+                                            chatMessage.isCurrentUser = true;
+                                        }
+                                    } else {
+                                        // Some other sender (should not happen in AI chat)
+                                        Log.w("AiFragment", "Unknown sender type: " + userId);
+                                        chatMessage.setUsername("Unknown");
+                                        chatMessage.setSenderType("unknown");
+                                    }
+                                }
+
+                                updatedMessages.add(chatMessage);
+                                Log.d("AiFragment", "Added message: " + chatMessage.getText() +
+                                        " - isCurrentUser: " + chatMessage.isCurrentUser() +
+                                        " - sender: " + chatMessage.getUsername());
                             }
                         } catch (Exception ex) {
                             Log.e("AiFragment", "Error mapping chat history document", ex);
                         }
                     }
-                    chatAdapter.notifyDataSetChanged();
-                    if (!chatMessages.isEmpty()) {
-                        recyclerView.scrollToPosition(chatMessages.size() - 1);
-                    }
+
+                    // Replace the entire list instead of individual updates
+                    chatMessages.clear();
+                    chatMessages.addAll(updatedMessages);
+
+                    // Make sure we're on the UI thread before updating RecyclerView
+                    requireActivity().runOnUiThread(() -> {
+                        Log.d("AiFragment", "Notifying adapter with " + chatMessages.size() + " messages");
+                        chatAdapter.notifyDataSetChanged();
+                        if (!chatMessages.isEmpty()) {
+                            recyclerView.scrollToPosition(chatMessages.size() - 1);
+                        }
+                    });
                 });
     }
 
     private void sendMessage(String message) {
         String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         if (userId == null) {
-             Log.e("AiFragment", "User not logged in, cannot send message.");
-             return;
-         }
+            Log.e("AiFragment", "User not logged in, cannot send message.");
+            return;
+        }
 
+        // Create message with explicit user identification
         ChatMessage userMessage = new ChatMessage(
                 message,
                 System.currentTimeMillis(),
-                true ,
-                "user"
+                true, // This message is from the current user
+                "user" // Set sender type explicitly
         );
+
+        // Set the actual Firebase UID (this is critical for proper identification)
         userMessage.setUserId(userId);
         userMessage.setUsername("You");
+        userMessage.setSenderType("user"); // Ensure sender type is set
+
+        // Log message creation for debugging
+        Log.d("AiFragment", "Created user message: " + message +
+                " | userId set to: " + userId +
+                " | currentUser: " + userMessage.isCurrentUser());
 
         chatMessages.add(userMessage);
         chatAdapter.notifyDataSetChanged();
@@ -157,20 +214,25 @@ public class AiFragment extends Fragment {
                 .add(userMessage)
                 .addOnSuccessListener(documentReference -> {
                     userMessage.setMessageId(documentReference.getId()); // Store the Firestore ID
-                    getAiResponse(message); // Call AI *after* successfully saving user message
                 })
                 .addOnFailureListener(e -> {
                     Log.e("AiFragment", "Error saving user message", e);
-                    // Maybe remove the message from the local list or show an error indicator?
-                    // For now, we still call the AI, but the user message isn't saved
-                    getAiResponse(message); // Decide if AI should still respond on save failure
                 });
+
+        // Add a small delay before getting AI response to ensure UI updates correctly
+        new android.os.Handler().postDelayed(() -> {
+            // Get AI response only once, with a delay for better UI experience
+            getAiResponse(message);
+        }, 500); // 500ms delay
     }
 
     private void getAiResponse(String userInput) {
         progressBar.setVisibility(View.VISIBLE);
 
         try {
+            // Add debug logging
+            Log.d("AiFragment", "Making AI request for: " + userInput);
+
             JSONObject requestBody = new JSONObject();
             String prompt = "<s>[INST] <<SYS>>\n" +
                     "You are an empathetic virtual therapist. Support users emotionally with concise, nurturing responses.\n" +
@@ -183,11 +245,33 @@ public class AiFragment extends Fragment {
             parameters.put("temperature", 0.7);
             requestBody.put("parameters", parameters);
 
+            // Log the full request payload for debugging
+            Log.d("AiFragment", "AI request payload: " + requestBody.toString());
+
             StringRequest request = new StringRequest(
                     Request.Method.POST,
                     HUGGING_FACE_API,
-                    response -> handleAiResponse(response, userInput),
-                    error -> handleAiError(userInput)
+                    response -> {
+                        Log.d("AiFragment", "AI response received. Length: " + response.length());
+                        if (response.length() < 200) {
+                            // If response is short enough, log the whole thing
+                            Log.d("AiFragment", "AI response content: " + response);
+                        } else {
+                            // Otherwise just log the beginning
+                            Log.d("AiFragment", "AI response content (truncated): " +
+                                    response.substring(0, 200) + "...");
+                        }
+                        handleAiResponse(response, userInput);
+                    },
+                    error -> {
+                        Log.e("AiFragment", "AI request error: " + error.toString());
+                        if (error.networkResponse != null) {
+                            Log.e("AiFragment", "Error status code: " + error.networkResponse.statusCode);
+                            Log.e("AiFragment", "Error response data: " +
+                                    new String(error.networkResponse.data));
+                        }
+                        handleAiError(userInput);
+                    }
             ) {
                 @Override
                 public byte[] getBody() {
@@ -220,23 +304,42 @@ public class AiFragment extends Fragment {
     }
 
     private void handleAiResponse(String response, String originalUserInput) {
+        Log.d("AiFragment", "Received raw AI response: " + response.substring(0, Math.min(100, response.length())) + "...");
+
         requireActivity().runOnUiThread(() -> {
             progressBar.setVisibility(View.GONE);
 
+            // Check for API authentication errors
+            if (response.contains("error") && response.contains("authorization")) {
+                Log.e("AiFragment", "API Authentication error: " + response);
+                handleApiAuthError();
+                return;
+            }
+
             String aiText = parseAiResponse(response);
             if (aiText.isEmpty()) {
+                Log.e("AiFragment", "Empty AI response after parsing");
                 handleAiError(originalUserInput);
                 return;
             }
 
+            // Create AI message with explicit AI identification
             ChatMessage aiMessage = new ChatMessage(
                     aiText,
                     System.currentTimeMillis(),
-                    false ,
-                    "user"// isCurrentUser = false for AI
+                    false, // This is NOT from the current user (it's from AI)
+                    "AI" // Set correct role
             );
+
+            // AI system messages use this special ID that will never match a Firebase UID
             aiMessage.setUserId("ai_system"); // Special ID for AI
             aiMessage.setUsername("AI Assistant");
+            aiMessage.setSenderType("AI"); // Explicitly set sender type for AI messages
+
+            // Log message creation for debugging
+            Log.d("AiFragment", "Created AI message: " + aiText.substring(0, Math.min(20, aiText.length())) + "..." +
+                    " | userId set to: ai_system" +
+                    " | currentUser: " + aiMessage.isCurrentUser());
 
             chatMessages.add(aiMessage);
             chatAdapter.notifyDataSetChanged();
@@ -257,18 +360,72 @@ public class AiFragment extends Fragment {
         });
     }
 
-    private void handleAiError(String originalUserInput) {
+    private void handleApiAuthError() {
         requireActivity().runOnUiThread(() -> {
             progressBar.setVisibility(View.GONE);
-            String errorText = "Sorry, I encountered an error. Please try again.";
+            String errorText = "Sorry, I'm having trouble accessing the AI service. Please check your API key in the settings.";
+            // Create API auth error message with explicit AI identification
             ChatMessage errorMessage = new ChatMessage(
                     errorText,
                     System.currentTimeMillis(),
                     false,
-                    "AI"// AI message
+                    "AI"
             );
+
+            // AI error messages use this special ID that will never match a Firebase UID
             errorMessage.setUserId("ai_system_error");
             errorMessage.setUsername("AI Assistant");
+            errorMessage.setSenderType("AI");
+
+            // Log message creation for debugging
+            Log.d("AiFragment", "Created API auth error message: " + errorText +
+                    " | userId set to: ai_system_error" +
+                    " | currentUser: " + errorMessage.isCurrentUser());
+
+            chatMessages.add(errorMessage);
+            chatAdapter.notifyDataSetChanged();
+            recyclerView.scrollToPosition(chatMessages.size() - 1);
+
+            // Save to Firestore
+            String currentUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+            if (currentUid != null) {
+                db.collection("ai_chats")
+                        .document(currentUid)
+                        .collection("messages")
+                        .add(errorMessage)
+                        .addOnFailureListener(e -> Log.e("AiFragment", "Error saving auth error message", e));
+            }
+
+            // Show an error dialog
+            new android.app.AlertDialog.Builder(requireContext())
+                    .setTitle("API Authentication Error")
+                    .setMessage("There was a problem authenticating with the AI service. Please check your API key in the settings.")
+                    .setPositiveButton("OK", null)
+                    .show();
+        });
+    }
+
+    private void handleAiError(String originalUserInput) {
+        requireActivity().runOnUiThread(() -> {
+            progressBar.setVisibility(View.GONE);
+            String errorText = "Sorry, I encountered an error. Please try again.";
+            // Create error message with explicit AI identification
+            ChatMessage errorMessage = new ChatMessage(
+                    errorText,
+                    System.currentTimeMillis(),
+                    false, // This is NOT from the current user (it's from AI)
+                    "AI" // Set correct role
+            );
+
+            // AI error messages use this special ID that will never match a Firebase UID
+            errorMessage.setUserId("ai_system_error");
+            errorMessage.setUsername("AI Assistant");
+            errorMessage.setSenderType("AI"); // Explicitly set sender type for AI error messages
+
+            // Log message creation for debugging
+            Log.d("AiFragment", "Created error message: " + errorText +
+                    " | userId set to: ai_system_error" +
+                    " | currentUser: " + errorMessage.isCurrentUser());
 
             chatMessages.add(errorMessage);
             chatAdapter.notifyDataSetChanged();
@@ -283,23 +440,57 @@ public class AiFragment extends Fragment {
                         .add(errorMessage)
                         .addOnFailureListener(e -> Log.e("AiFragment", "Error saving error message", e));
             } else {
-                 Log.e("AiFragment", "User not logged in, cannot save AI error message.");
-             }
+                Log.e("AiFragment", "User not logged in, cannot save AI error message.");
+            }
         });
     }
 
     private String parseAiResponse(String response) {
         try {
-            JSONArray arr = new JSONArray(response);
-            String aiText = arr.getJSONObject(0).optString("generated_text", "");
-            return aiText.replaceAll("(?s)^.*\\[/INST\\]\\s*", "").replaceAll("^<s>", "").trim();
-        } catch (Exception e) {
+            Log.d("AiFragment", "Parsing AI response: " + response);
+
+            // First try to parse as JSONArray (common format)
+            try {
+                JSONArray arr = new JSONArray(response);
+                if (arr.length() > 0) {
+                    String aiText = arr.getJSONObject(0).optString("generated_text", "");
+                    String parsedText = aiText.replaceAll("(?s)^.*\\[/INST\\]\\s*", "").replaceAll("^<s>", "").trim();
+                    Log.d("AiFragment", "Successfully parsed AI response as JSONArray: " + parsedText);
+                    return parsedText;
+                }
+            } catch (Exception e) {
+                Log.d("AiFragment", "Not a JSONArray, trying as JSONObject");
+            }
+
+            // If not a JSONArray, try as JSONObject
             try {
                 JSONObject obj = new JSONObject(response);
-                return obj.optString("generated_text", "").trim();
-            } catch (Exception ex) {
-                return "";
+                String parsedText = obj.optString("generated_text", "").trim();
+                String cleanedText = parsedText.replaceAll("(?s)^.*\\[/INST\\]\\s*", "").replaceAll("^<s>", "").trim();
+                Log.d("AiFragment", "Successfully parsed AI response as JSONObject: " + cleanedText);
+                return cleanedText;
+            } catch (Exception e) {
+                Log.d("AiFragment", "Not a JSONObject either, trying as plain text");
             }
+
+            // If neither, try to extract content directly with regex
+            String plainTextParsed = response.replaceAll("(?s)^.*\\[/INST\\]\\s*", "").replaceAll("^<s>", "").trim();
+            if (!plainTextParsed.isEmpty()) {
+                Log.d("AiFragment", "Extracted response using regex: " + plainTextParsed);
+                return plainTextParsed;
+            }
+
+            // If all else fails, just return the raw response if it's not too long
+            if (response.length() < 500) {
+                Log.d("AiFragment", "Using raw response: " + response);
+                return response.trim();
+            }
+
+            Log.e("AiFragment", "Could not parse AI response in any format");
+            return "I apologize, but I'm having trouble understanding. Could you please rephrase that?";
+        } catch (Exception e) {
+            Log.e("AiFragment", "Error parsing AI response", e);
+            return "I apologize, but I'm having trouble understanding. Could you please rephrase that?";
         }
     }
 }

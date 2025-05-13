@@ -11,10 +11,11 @@ public class ChatMessage {
     private String username;
     private String text;
     private long timestamp;
-    private boolean isCurrentUser;
+    boolean isCurrentUser;
     private MessageStatus status;
     private int avatarColor;
     private String avatarInitial;
+    private String senderType; // Add this field to track sender type (user/AI)
 
     public ChatMessage() {}
 
@@ -54,15 +55,11 @@ public class ChatMessage {
     }
 
     // Shared constructor
-    ChatMessage(String text, long timestamp, boolean isCurrentUser, String username) {
+    ChatMessage(String text, long timestamp, boolean isCurrentUser, String senderType) {
         this.text = text;
         this.timestamp = timestamp;
         this.isCurrentUser = isCurrentUser;
-        this.username = username;
-        if (username != null) {
-            this.avatarColor = generateColorFromUserId(username);
-            this.avatarInitial = username.substring(0, 1).toUpperCase();
-        }
+        this.senderType = senderType;
         this.status = MessageStatus.SENT;
     }
 
@@ -94,6 +91,14 @@ public class ChatMessage {
 
     public boolean isCurrentUser() {
         return isCurrentUser;
+    }
+
+    public String getSenderType() {
+        return senderType;
+    }
+
+    public void setSenderType(String senderType) {
+        this.senderType = senderType;
     }
 
     public MessageStatus getStatus() {

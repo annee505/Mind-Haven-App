@@ -244,9 +244,9 @@ public class MeditationFragment extends Fragment implements MeditationAdapter.On
         });
 
         // Observe current category
-        viewModel.getCurrentCategory().observe(getViewLifecycleOwner(), category -> {
+        /*viewModel.getCurrentCategory().observe(getViewLifecycleOwner(), category -> {
             // Update UI to reflect category change if needed
-        });
+        });*/
     }
 
     private MeditationAudio findFeaturedMeditation(List<MeditationAudio> meditations) {

@@ -145,7 +145,8 @@ public class MeditationApiService {
                 // Create a resource ID (this would be a real resource in a real app)
                 int resourceId = idCounter++;
 
-                MeditationAudio meditation = new MeditationAudio(
+                MeditationAudio meditation;
+                meditation = new MeditationAudio(
                         title,
                         description,
                         duration,

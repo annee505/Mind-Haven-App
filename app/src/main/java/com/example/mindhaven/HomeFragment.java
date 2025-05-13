@@ -12,7 +12,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 public class HomeFragment extends Fragment {
 
-    private CardView cardMoodTracker, cardRecommendations, cardPracticalCourses;
+    private CardView cardMoodTracker, cardRecommendations, cardPracticalCourses, cardEmergencyContact, cardSleepTracker;
     private FloatingActionButton fabAddEmergencyContact;
 
     @Nullable
@@ -24,12 +24,12 @@ public class HomeFragment extends Fragment {
         cardMoodTracker = view.findViewById(R.id.card_mood_tracker);
         cardRecommendations = view.findViewById(R.id.card_recommendations);
         cardPracticalCourses = view.findViewById(R.id.card_courses);
+        cardSleepTracker = view.findViewById(R.id.card_sleep_tracker);
 
-        
         cardMoodTracker.setOnClickListener(v -> openFragment(new MoodTrackerFragment()));
         cardRecommendations.setOnClickListener(v -> openFragment(new RecommendationsFragment()));
         cardPracticalCourses.setOnClickListener(v -> openFragment(new PracticalCoursesFragment()));
-
+        cardSleepTracker.setOnClickListener(v -> openFragment(new SleepTrackerFragment()));
 
 
         return view;

@@ -1,9 +1,12 @@
+
 package com.example.mindhaven;
 
 import android.content.Context;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
@@ -26,7 +29,6 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.MessageViewHol
         this.localUserId = null;
     }
 
-    // New constructor for Anonymous Chat
     public ChatAdapter(Context context, List<ChatMessage> messages, String localUserId) {
         this.messages = messages != null ? messages : new ArrayList<>();
         this.isAnonymousChat = true;
@@ -57,21 +59,24 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.MessageViewHol
         boolean isCurrentUser = message.getSenderId().equals(localUserId);
 
         if (isCurrentUser) {
-            // Right-aligned user message
             holder.rightContainer.setVisibility(View.VISIBLE);
             holder.leftContainer.setVisibility(View.GONE);
             holder.rightMessageText.setText(message.getText());
             holder.statusIndicator.setVisibility(View.GONE);
+            holder.rightContainer.setLayoutParams(new ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT));
         } else {
-            // Left-aligned other messages
             holder.leftContainer.setVisibility(View.VISIBLE);
             holder.rightContainer.setVisibility(View.GONE);
             holder.leftMessageText.setText(message.getText());
             holder.leftUsername.setVisibility(View.GONE);
             holder.leftAvatar.setVisibility(View.GONE);
+            holder.leftContainer.setLayoutParams(new ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT));
         }
 
-        // Common timestamp handling
         String timePattern = isSameDay(message.getTimestamp()) ? "HH:mm" : "MMM d, HH:mm";
         TextView timestampView = isCurrentUser ? holder.rightTimestamp : holder.leftTimestamp;
         timestampView.setText(new SimpleDateFormat(timePattern, Locale.getDefault())
@@ -79,47 +84,35 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.MessageViewHol
     }
 
     private void handleAIMessage(ChatMessage message, MessageViewHolder holder) {
-        // Check if it's a user message (from current user) or AI message
-        // For AI messages: userId will start with "ai_system" and isCurrentUser will be false
         boolean isUserMessage = message.isCurrentUser();
 
-        if (isUserMessage) {
-            // This is a user message - show on the right
-            holder.rightContainer.setVisibility(View.VISIBLE);
-            holder.leftContainer.setVisibility(View.GONE);
-            holder.rightMessageText.setText(message.getText());
+        holder.rightContainer.setVisibility(isUserMessage ? View.VISIBLE : View.GONE);
+        holder.leftContainer.setVisibility(isUserMessage ? View.GONE : View.VISIBLE);
 
-            // Status indicator
-            if (message.getStatus() != null) {
-                switch (message.getStatus()) {
-                    case SENDING:
-                        holder.statusIndicator.setImageResource(R.drawable.ic_clock);
-                        break;
-                    case SENT:
-                        holder.statusIndicator.setImageResource(R.drawable.ic_check);
-                        break;
-                    case DELIVERED:
-                        holder.statusIndicator.setImageResource(R.drawable.ic_double_check);
-                        break;
-                    case READ:
-                        holder.statusIndicator.setImageResource(R.drawable.ic_double_check_filled);
-                        break;
-                }
-                holder.statusIndicator.setVisibility(View.VISIBLE);
-            } else {
-                holder.statusIndicator.setVisibility(View.GONE);
-            }
+        if (isUserMessage) {
+            // User message styling - right side
+            holder.rightMessageText.setText(message.getText());
+            holder.rightContainer.setLayoutParams(new FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    Gravity.END
+            ));
+            holder.statusIndicator.setVisibility(View.GONE);
         } else {
-            // This is an AI message - show on the left
-            holder.leftContainer.setVisibility(View.VISIBLE);
-            holder.rightContainer.setVisibility(View.GONE);
+            // AI message styling - left side
             holder.leftMessageText.setText(message.getText());
+            holder.leftUsername.setVisibility(View.VISIBLE);
             holder.leftUsername.setText("AI Assistant");
             holder.leftAvatar.setVisibility(View.VISIBLE);
             holder.leftAvatarInitial.setText("AI");
+            holder.leftContainer.setLayoutParams(new FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    Gravity.START
+            ));
+            holder.statusIndicator.setVisibility(View.GONE);
         }
 
-        // Timestamp handling
         String timePattern = isSameDay(message.getTimestamp()) ? "HH:mm" : "MMM d, HH:mm";
         TextView timestampView = isUserMessage ? holder.rightTimestamp : holder.leftTimestamp;
         timestampView.setText(new SimpleDateFormat(timePattern, Locale.getDefault())
