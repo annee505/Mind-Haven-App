@@ -5,7 +5,7 @@ import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import android.widget.TextView;
 
-import com.example.mindhaven.model.Course;
+import com.example.mindhaven.model.PracticalCourse;
 
 public class CourseDetailActivity extends AppCompatActivity {
     private TextView titleTextView;
@@ -26,12 +26,12 @@ public class CourseDetailActivity extends AppCompatActivity {
         // Get the course data from the intent
         Intent intent = getIntent();
         if (intent != null && intent.hasExtra("course")) {
-            Course course = (Course) intent.getSerializableExtra("course");
+            PracticalCourse course = (PracticalCourse) intent.getSerializableExtra("course");
             if (course != null) {
                 titleTextView.setText(course.getTitle());
                 descriptionTextView.setText(course.getDescription());
                 durationTextView.setText(String.valueOf(course.getDuration()) + " minutes");
-                typeTextView.setText(course.getType());
+                //typeTextView.setText(course.getType());
             }
         }
     }

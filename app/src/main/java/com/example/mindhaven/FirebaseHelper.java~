@@ -4,7 +4,6 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.example.mindhaven.model.PracticalCourse;
 import com.example.mindhaven.model.User;
 import com.example.mindhaven.model.MeditationSession;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -89,7 +88,7 @@ public class FirebaseHelper {
                             practicalCourse.setDescription(course.getDescription());
                             //practicalCourse.setDuration(course.getDuration());
                             practicalCourse.setDifficulty(course.getDifficulty());
-                            practicalCourse.setCompletionRate(course.getProgress()); // Assuming this is how you want to set it
+                            //practicalCourse.setCompletionRate(course.getProgress()); // Assuming this is how you want to set it
                             practicalCourses.add(practicalCourse);
                         }
                         callback.onCallback(practicalCourses); // Return the list of PracticalCourse

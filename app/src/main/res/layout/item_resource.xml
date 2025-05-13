@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/resourceCardView"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardBackgroundColor="@color/card_background_light_beige"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="2dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <ImageView
+            android:id="@+id/resourceIconImageView"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/circle_background"
+            android:padding="8dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="@color/icon_brown"
+            tools:src="@drawable/ic_mental_health_basics" />
+
+        <TextView
+            android:id="@+id/resourceCategoryTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif-medium"
+            android:singleLine="true"
+            android:textAllCaps="true"
+            android:textColor="@color/text_light_brown"
+            android:textSize="12sp"
+            app:layout_constraintBottom_toBottomOf="@id/resourceIconImageView"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/resourceIconImageView"
+            app:layout_constraintTop_toTopOf="@id/resourceIconImageView"
+            tools:text="Mental Health Basics" />
+
+        <TextView
+            android:id="@+id/resourceTitleTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:fontFamily="sans-serif-medium"
+            android:textColor="@color/text_dark_brown"
+            android:textSize="18sp"
+            app:layout_constraintTop_toBottomOf="@id/resourceIconImageView"
+            tools:text="Understanding Depression" />
+
+        <TextView
+            android:id="@+id/resourceDescriptionTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textColor="@color/text_medium_brown"
+            android:textSize="14sp"
+            app:layout_constraintTop_toBottomOf="@id/resourceTitleTextView"
+            tools:text="Learn about the symptoms, causes, and treatments for depression from the National Institute of Mental Health." />
+
+        <TextView
+            android:id="@+id/resourceSourceTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:textColor="@color/text_light_brown"
+            android:textSize="12sp"
+            android:textStyle="italic"
+            app:layout_constraintTop_toBottomOf="@id/resourceDescriptionTextView"
+            tools:text="Source: National Institute of Mental Health" />
+
+        <Button
+            android:id="@+id/resourceLearnMoreButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/button_background"
+            android:text="@string/learn_more"
+            android:textAllCaps="false"
+            android:textColor="@color/text_dark_brown"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/resourceSourceTextView" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.cardview.widget.CardView>

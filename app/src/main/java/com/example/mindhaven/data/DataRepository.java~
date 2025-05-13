@@ -1,0 +1,4 @@
+package com.example.mindhaven.data;
+
+public class DataRepository {
+}

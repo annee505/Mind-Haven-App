@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="pastel">#FDE7BB</color>
+    <color name="brown">#997C70</color>
+    <color name="wbrown">#C19E8A</color>
+    <color name="beige">#D9C2A3</color>
+    <color name="light_gray">#D3D3D3</color>
+    <color name="primary">#C89F91</color>
+    <color name="darkred">#8B0000</color>
+    
+    <!-- New colors for mood tracking -->
+    <color name="mood_card_background">#F5E6E8</color>
+    <color name="mood_button_brown">#8B7355</color>
+    <color name="mood_feeling_background">#F8F0E3</color>
+    <color name="mood_report_background">#E8D5C4</color>
+    <color name="chip_background_color">#E0F7FA</color>
+    <color name="your_message_color">#DCF8C6</color>
+    <color name="other_message_color">#FFFFFF</color>
+</resources>

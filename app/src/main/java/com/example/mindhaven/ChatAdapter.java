@@ -20,14 +20,11 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.MessageViewHol
     private final boolean isAnonymousChat;
     private final String localUserId;
 
-
-
     public ChatAdapter(Context context, List<ChatMessage> messages) {
         this.messages = messages != null ? messages : new ArrayList<>();
         this.isAnonymousChat = false;
         this.localUserId = null;
     }
-
 
     // New constructor for Anonymous Chat
     public ChatAdapter(Context context, List<ChatMessage> messages, String localUserId) {
@@ -82,9 +79,12 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.MessageViewHol
     }
 
     private void handleAIMessage(ChatMessage message, MessageViewHolder holder) {
-        boolean isUserMessage = message.isCurrentUser() && !"ai_system".equals(message.getUserId());
+        // Check if it's a user message (from current user) or AI message
+        // For AI messages: userId will start with "ai_system" and isCurrentUser will be false
+        boolean isUserMessage = message.isCurrentUser();
 
         if (isUserMessage) {
+            // This is a user message - show on the right
             holder.rightContainer.setVisibility(View.VISIBLE);
             holder.leftContainer.setVisibility(View.GONE);
             holder.rightMessageText.setText(message.getText());
@@ -110,6 +110,7 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.MessageViewHol
                 holder.statusIndicator.setVisibility(View.GONE);
             }
         } else {
+            // This is an AI message - show on the left
             holder.leftContainer.setVisibility(View.VISIBLE);
             holder.rightContainer.setVisibility(View.GONE);
             holder.leftMessageText.setText(message.getText());

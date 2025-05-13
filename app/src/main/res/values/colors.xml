@@ -9,6 +9,7 @@
     <color name="light_gray">#D3D3D3</color>
     <color name="primary">#C89F91</color>
     <color name="darkred">#8B0000</color>
+
     
     <!-- New colors for mood tracking -->
     <color name="mood_card_background">#F5E6E8</color>
@@ -18,4 +19,41 @@
     <color name="chip_background_color">#E0F7FA</color>
     <color name="your_message_color">#DCF8C6</color>
     <color name="other_message_color">#FFFFFF</color>
-</resources>
+
+        <color name="primary_dark">#8b6b4d</color>
+        <color name="primary_light">#d7c0ae</color>
+        <color name="accent">#8b7e74</color>
+
+        <!-- Background colors -->
+        <color name="background_beige">#f8f3eb</color>
+        <color name="card_background_light_beige">#f0e9db</color>
+        <color name="tab_background">#e8d5c4</color>
+
+        <!-- Text colors -->
+        <color name="text_dark_brown">#5c4f3c</color>
+        <color name="text_medium_brown">#7d725e</color>
+        <color name="text_light_brown">#a59e93</color>
+
+        <!-- Accent colors -->
+        <color name="accent_dark_brown">#8b6b4d</color>
+        <color name="accent_medium_brown">#a07d5e</color>
+        <color name="accent_light_brown">#d7c0ae</color>
+
+        <!-- Icon colors -->
+        <color name="icon_brown">#8b7e74</color>
+
+        <!-- Tab colors -->
+        <color name="tab_text_selected">#5c4f3c</color>
+        <color name="tab_text_unselected">#a59e93</color>
+        <color name="tab_indicator">#a07d5e</color>
+
+        <!-- Difficulty level colors -->
+        <color name="difficulty_easy">#6a994e</color>
+        <color name="difficulty_moderate">#bc8a5f</color>
+        <color name="difficulty_challenging">#db7f67</color>
+        <color name="difficulty_default">#8b7e74</color>
+
+        <!-- Error color -->
+        <color name="error_text">#c1666b</color>
+
+    </resources>

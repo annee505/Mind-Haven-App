@@ -4,7 +4,6 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.example.mindhaven.model.PracticalCourse;
 import com.example.mindhaven.model.User;
 import com.example.mindhaven.model.MeditationSession;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -40,9 +39,7 @@ public class FirebaseHelper {
         void onCallback(User user);
     }
 
-    public interface CourseCallback {
-        void onCallback(List<PracticalCourse> courses);
-    }
+
 
     public interface MeditationCallback {
         void onCallback(List<MeditationSession> sessions);
@@ -74,33 +71,7 @@ public class FirebaseHelper {
                 });
     }
 
-    public void fetchCourses(CourseCallback callback) {
-        database.child("courses")
-                .addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        List<PracticalCourse> practicalCourses = new ArrayList<>();
-                        for (DataSnapshot courseSnapshot : snapshot.getChildren()) {
-                            PracticalCourse course = courseSnapshot.getValue(PracticalCourse.class);
-                            // Convert Course to PracticalCourse
-                            PracticalCourse practicalCourse = new PracticalCourse();
-                            practicalCourse.setId(course.getId());
-                            practicalCourse.setTitle(course.getTitle());
-                            practicalCourse.setDescription(course.getDescription());
-                            //practicalCourse.setDuration(course.getDuration());
-                            practicalCourse.setDifficulty(course.getDifficulty());
-                            //practicalCourse.setCompletionRate(course.getProgress()); // Assuming this is how you want to set it
-                            practicalCourses.add(practicalCourse);
-                        }
-                        callback.onCallback(practicalCourses); // Return the list of PracticalCourse
-                    }
 
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-                        Log.e("Firebase", "Error fetching courses", error.toException());
-                    }
-                });
-    }
 
     public void saveMeditationSession(String userId, MeditationSession session) {
         database.child("meditation").child(userId).push().setValue(session);

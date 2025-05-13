@@ -288,13 +288,5 @@
             android:layout_marginTop="16dp"
             android:layout_marginBottom="16dp"
             tools:listitem="@layout/item_mood_report" />
-
-        <Button
-            android:id="@+id/test_notification_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Test Notification"
-            android:layout_marginTop="16dp"/>
-
     </LinearLayout>
 </ScrollView>

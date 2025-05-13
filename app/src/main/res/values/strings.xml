@@ -5,6 +5,40 @@
     <string name="chat_button"></string>
     <string name="settings_button"></string>
 
+        <string name="fragment_title_practical_courses">Mental Health Resources</string>
+        <string name="tab_educational_resources">Educational Resources</string>
+        <string name="tab_practical_exercises">Practical Exercises</string>
+
+        <!-- Error messages -->
+        <string name="error_loading_data">Failed to load mental health data. Please try again later.</string>
+        <string name="no_resources_available">No educational resources available. Please check back later for updated content.</string>
+        <string name="no_exercises_available">No practical exercises available. Please check back later for updated content.</string>
+
+        <!-- Button text -->
+        <string name="learn_more">Learn More</string>
+        <string name="show_steps">Show Steps</string>
+        <string name="hide_steps">Hide Steps</string>
+
+        <!-- Resource categories -->
+        <string name="category_mental_health_basics">Mental Health Basics</string>
+        <string name="category_disorders">Disorders</string>
+        <string name="category_coping_skills">Coping Skills</string>
+        <string name="category_wellness">Wellness Practices</string>
+        <string name="category_physical_health">Physical Health</string>
+        <string name="category_treatments">Treatments</string>
+
+        <!-- Exercise categories -->
+        <string name="category_mindfulness">Mindfulness</string>
+        <string name="category_relaxation">Relaxation</string>
+        <string name="category_positivity">Positivity</string>
+        <string name="category_cognitive">Cognitive Techniques</string>
+        <string name="category_anxiety">Anxiety Management</string>
+        <string name="category_self_discovery">Self-Discovery</string>
+
+        <!-- Difficulty levels -->
+        <string name="difficulty_easy">Easy</string>
+        <string name="difficulty_moderate">Moderate</string>
+        <string name="difficulty_challenging">Challenging</string>
     <string name="favorite_button">Add to favorites</string>
     <string name="shuffle_button">Shuffle Recommendations</string>
     <string name="favorites">Favorites</string>

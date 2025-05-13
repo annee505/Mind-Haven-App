@@ -146,13 +146,7 @@ public class MoodTrackerFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         // Add test button
-        Button testNotificationBtn = view.findViewById(R.id.test_notification_button);
-        testNotificationBtn.setOnClickListener(v -> {
-            // Trigger notification immediately for testing
-            NotificationReceiver receiver = new NotificationReceiver();
-            receiver.onReceive(requireContext(), new Intent());
-            Toast.makeText(requireContext(), "Test notification triggered", Toast.LENGTH_SHORT).show();
-        });
+
     }
 
     private void setupMoodButtons() {

@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/exerciseCardView"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardBackgroundColor="@color/card_background_light_beige"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="2dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <ImageView
+            android:id="@+id/exerciseIconImageView"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/circle_background"
+            android:padding="8dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="@color/icon_brown"
+            tools:src="@drawable/ic_mindfulness" />
+
+        <TextView
+            android:id="@+id/exerciseCategoryTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif-medium"
+            android:singleLine="true"
+            android:textAllCaps="true"
+            android:textColor="@color/text_light_brown"
+            android:textSize="12sp"
+            app:layout_constraintBottom_toBottomOf="@id/exerciseIconImageView"
+            app:layout_constraintEnd_toStartOf="@id/exerciseDifficultyTextView"
+            app:layout_constraintStart_toEndOf="@id/exerciseIconImageView"
+            app:layout_constraintTop_toTopOf="@id/exerciseIconImageView"
+            tools:text="Mindfulness" />
+
+        <TextView
+            android:id="@+id/exerciseDifficultyTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/difficulty_badge_background"
+            android:paddingStart="8dp"
+            android:paddingTop="4dp"
+            android:paddingEnd="8dp"
+            android:paddingBottom="4dp"
+            android:textColor="@color/white"
+            android:textSize="12sp"
+            app:layout_constraintBottom_toBottomOf="@id/exerciseIconImageView"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/exerciseIconImageView"
+            tools:text="Easy" />
+
+        <TextView
+            android:id="@+id/exerciseTitleTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:fontFamily="sans-serif-medium"
+            android:textColor="@color/text_dark_brown"
+            android:textSize="18sp"
+            app:layout_constraintTop_toBottomOf="@id/exerciseIconImageView"
+            tools:text="5-Minute Mindful Breathing" />
+
+        <TextView
+            android:id="@+id/exerciseDescriptionTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textColor="@color/text_medium_brown"
+            android:textSize="14sp"
+            app:layout_constraintTop_toBottomOf="@id/exerciseTitleTextView"
+            tools:text="A quick mindfulness exercise focusing on breathing to reduce stress and improve focus." />
+
+        <TextView
+            android:id="@+id/exerciseTimeTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:drawablePadding="4dp"
+            android:gravity="center_vertical"
+            android:textColor="@color/text_light_brown"
+            android:textSize="12sp"
+            app:drawableStartCompat="@drawable/ic_clock"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/exerciseDescriptionTextView"
+            tools:text="5 minutes" />
+
+        <Button
+            android:id="@+id/exerciseExpandButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/button_outline_background"
+            android:text="@string/show_steps"
+            android:textAllCaps="false"
+            android:textColor="@color/accent_medium_brown"
+            app:layout_constraintTop_toBottomOf="@id/exerciseTimeTextView" />
+
+        <LinearLayout
+            android:id="@+id/exerciseStepsLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:orientation="vertical"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/exerciseExpandButton" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.cardview.widget.CardView>

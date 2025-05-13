@@ -114,6 +114,7 @@ public class HomeActivity extends AppCompatActivity {
 
             saveProfileButton.setOnClickListener(v -> saveUserProfile());
 
+            initializeCourses();
 
             handleIntent(getIntent());
 
@@ -126,6 +127,14 @@ public class HomeActivity extends AppCompatActivity {
         } catch (Exception e) {
             Log.e("HomeActivity", "Error in onCreate", e);
         }
+    }
+
+    private void initializeCourses() {
+        RecyclerView coursesRecycler = findViewById(R.id.rvCourses);
+        FirebaseHelper.getInstance().fetchCourses(courses -> {
+            CourseAdapter adapter = new CourseAdapter(courses);
+            coursesRecycler.setAdapter(adapter);
+        });
     }
 
     @Override
